@@ -6,15 +6,21 @@ like deleting a directory recursively, moving a file (even across different moun
 
 ## Using with your project
 
-Not yet in Maven official repo, just clone the appropriate tag from git and type
-
-```sh
-$ mvn clean install -P '!build-native'
+First, add this repo to your pom.xml:
+```xml
+  <repositories>
+    <repository>
+      <id>baka.sk</id>
+      <name>Baka</name>
+      <url>http://www.baka.sk/maven2</url>
+    </repository>
+  </repositories>
 ```
 
 You can then add Maven dependency for `sk.baka.android:dirutils:1.0`.
 
-Afterwards, download the native part of the library and unpack it to your Android project. Done!
+Afterwards, download the native part of the library here: http://www.baka.sk/maven2/sk/baka/android/dirutils/ (search for
+`dirutils-*-native.zip`) and unpack it to your Android project. Done!
 
 ## Building from scratch
 
