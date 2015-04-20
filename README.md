@@ -8,6 +8,8 @@ like deleting a directory recursively, moving a file (even across different moun
 
 First, add this repo to your pom.xml:
 ```xml
+<project ...>
+  ...
   <repositories>
     <repository>
       <id>baka.sk</id>
@@ -15,6 +17,7 @@ First, add this repo to your pom.xml:
       <url>http://www.baka.sk/maven2</url>
     </repository>
   </repositories>
+</project>
 ```
 
 You can then add Maven dependency for `sk.baka.android:dirutils:1.0`.
