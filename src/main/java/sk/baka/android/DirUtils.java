@@ -42,14 +42,26 @@ public class DirUtils {
      * @throws IllegalArgumentException if given path is not absolute.
      */
     public static void mkdir(@NotNull String directory) throws IOException {
-        if (!directory.startsWith("/")) {
+        mkdir(new File(directory));
+    }
+    /**
+     * Creates given directory. Does nothing if the directory already exists. Does not create parent directory - use {@link #mkdirs(String)} for that.
+     * <p></p>
+     * Fails if there already is a file with given name, or if the directory couldn't be created.
+     * <p></p>
+     * As opposed to dumb {@link File#mkdir()} this method throws {@link IOException} with informative message if the function fails.
+     * @param directory the directory to create, not null. Must be an absolute path (must start with a slash).
+     * @throws IOException if directory create fails.
+     * @throws IllegalArgumentException if given path is not absolute.
+     */
+    public static void mkdir(@NotNull File directory) throws IOException {
+        if (!directory.isAbsolute()) {
             throw new IllegalArgumentException("Parameter directory: invalid value " + directory + ": must be an absolute path");
         }
-        final File f = new File(directory);
-        if (f.exists() && f.isDirectory()) {
+        if (directory.exists() && directory.isDirectory()) {
             return;
         }
-        check(INSTANCE.mkdirInt(directory), "create directory '" + directory + "'");
+        check(INSTANCE.mkdirInt(directory.getAbsolutePath()), "create directory '" + directory + "'");
     }
 
     /**
@@ -63,11 +75,30 @@ public class DirUtils {
      * @throws IllegalArgumentException if given path is not absolute.
      */
     public static void mkdirs(@NotNull String directory) throws IOException {
-        if (!directory.startsWith("/")) {
+        mkdirs(new File(directory));
+    }
+
+    /**
+     * Creates given directory and all of necessary parent directories. Does nothing if the directory already exists.
+     * <p></p>
+     * Fails if there already is a file with given name, or if the directory couldn't be created. On failure, some directories might have been created.
+     * <p></p>
+     * As opposed to dumb {@link File#mkdirs()} this method throws {@link IOException} with informative message if the function fails.
+     * @param directory the directory to create, not null. Must be an absolute directory (must start with a slash).
+     * @throws IOException if directory create fails.
+     * @throws IllegalArgumentException if given path is not absolute.
+     */
+    public static void mkdirs(@NotNull File directory) throws IOException {
+        if (!directory.isAbsolute()) {
             throw new IllegalArgumentException("Parameter directory: invalid value " + directory + ": must be an absolute path");
         }
-        throw new RuntimeException("Unimplemented yet");
-        // @todo mvy implement
+        if (directory.exists()) {
+            // check if it is a file
+            mkdir(directory);
+            return;
+        }
+        mkdirs(directory.getParentFile());
+        mkdir(directory);
     }
 
     /**
@@ -77,14 +108,22 @@ public class DirUtils {
      * @throws IllegalArgumentException if given path is not absolute.
      */
     public static void delete(@NotNull String fileOrEmptyDirectory) throws IOException {
-        if (!fileOrEmptyDirectory.startsWith("/")) {
+        delete(new File(fileOrEmptyDirectory));
+    }
+    /**
+     * Deletes given file or empty directory. Does nothing if there is no such file or directory with given name.
+     * @param fileOrEmptyDirectory the file/directory to delete, not null. Must be an absolute path (must start with a slash).
+     * @throws IOException if directory create fails.
+     * @throws IllegalArgumentException if given path is not absolute.
+     */
+    public static void delete(@NotNull File fileOrEmptyDirectory) throws IOException {
+        if (!fileOrEmptyDirectory.isAbsolute()) {
             throw new IllegalArgumentException("Parameter fileOrEmptyDirectory: invalid value " + fileOrEmptyDirectory + ": must be an absolute path");
         }
-        final File f = new File(fileOrEmptyDirectory);
-        if (!f.exists()) {
+        if (!fileOrEmptyDirectory.exists()) {
             return;
         }
-        check(INSTANCE.deleteInt(fileOrEmptyDirectory), "delete '" + fileOrEmptyDirectory + "'");
+        check(INSTANCE.deleteInt(fileOrEmptyDirectory.getAbsolutePath()), "delete '" + fileOrEmptyDirectory + "'");
     }
 
     /**
@@ -94,15 +133,23 @@ public class DirUtils {
      * @throws IllegalArgumentException if given path is not absolute.
      */
     public static void deleteRecursively(@NotNull String path) throws IOException {
-        if (!path.startsWith("/")) {
+        deleteRecursively(new File(path));
+    }
+    /**
+     * Deletes given directory, including subdirectories.
+     * @param path the directory or file to delete, not null. Must be an absolute path (must start with a slash).
+     * @throws IOException if the directory delete fails.
+     * @throws IllegalArgumentException if given path is not absolute.
+     */
+    public static void deleteRecursively(@NotNull File path) throws IOException {
+        if (!path.isAbsolute()) {
             throw new IllegalArgumentException("Parameter path: invalid value " + path + ": must be an absolute path");
         }
-        final File f = new File(path);
-        if (!f.exists()) {
+        if (!path.exists()) {
             return;
         }
-        if (f.isDirectory()) {
-            final File[] files = f.listFiles();
+        if (path.isDirectory()) {
+            final File[] files = path.listFiles();
             if (files != null) {
                 for (final File child : files) {
                     deleteRecursively(child.getAbsolutePath());
@@ -207,6 +254,50 @@ public class DirUtils {
                 Log.i(TAG, "Failed to close " + s, t);
             }
         }
+    }
+
+    /**
+     * Deletes given file or dictionary. Does not throw {@link IOException}. Does NOT delete non-empty directory.
+     * @param fileOrDir the file or directory to delete, not null.
+     */
+    @Contract("null -> fail")
+    public static void deleteQuietly(@NotNull File fileOrDir) {
+        try {
+            delete(fileOrDir);
+        } catch (IOException ex) {
+            Log.e(TAG, "Failed to delete " + fileOrDir, ex);
+        }
+    }
+
+    /**
+     * Deletes given file or dictionary. Does not throw {@link IOException}. Does NOT delete non-empty directory.
+     * @param fileOrDir the file or directory to delete, not null.
+     */
+    @Contract("null -> fail")
+    public static void deleteQuietly(@NotNull String fileOrDir) {
+        deleteQuietly(new File(fileOrDir));
+    }
+
+    /**
+     * Deletes given file or dictionary. Does not throw {@link IOException}. Does NOT delete non-empty directory.
+     * @param fileOrDir the file or directory to delete, not null.
+     */
+    @Contract("null -> fail")
+    public static void deleteRecursivelyQuietly(@NotNull File fileOrDir) {
+        try {
+            deleteRecursively(fileOrDir);
+        } catch (IOException ex) {
+            Log.e(TAG, "Failed to delete " + fileOrDir, ex);
+        }
+    }
+
+    /**
+     * Deletes given file or dictionary. Does not throw {@link IOException}. Does NOT delete non-empty directory.
+     * @param fileOrDir the file or directory to delete, not null.
+     */
+    @Contract("null -> fail")
+    public static void deleteRecursivelyQuietly(@NotNull String fileOrDir) {
+        deleteRecursivelyQuietly(new File(fileOrDir));
     }
 
     private static final String TAG = DirUtils.class.getSimpleName();
