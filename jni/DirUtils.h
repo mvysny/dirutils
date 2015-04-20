@@ -7,6 +7,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#undef sk_baka_android_DirUtils_BUFSIZE
+#define sk_baka_android_DirUtils_BUFSIZE 8192L
 /*
  * Class:     sk_baka_android_DirUtils
  * Method:    mkdirInt

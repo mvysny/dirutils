@@ -118,7 +118,7 @@ public class DirUtils {
         }
     }
 
-    private native int deleteInt(String fileOrEmptyDirectory);
+    private native int deleteInt(String path);
 
     /**
      * Renames the file, overwriting the target file.

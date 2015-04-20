@@ -86,11 +86,22 @@
 				<version>1.2.1</version>
 				<executions>
 					<execution>
+						<id>javah</id>
+						<goals>
+							<goal>exec</goal>
+						</goals>
+						<phase>process-classes</phase>
+						<configuration>
+							<executable>javah</executable>
+							<commandlineArgs>-classpath target/classes -o jni/DirUtils.h sk.baka.android.DirUtils</commandlineArgs>
+						</configuration>
+					</execution>
+					<execution>
 						<id>ndk-build</id>
 						<goals>
 							<goal>exec</goal>
 						</goals>
-						<phase>compile</phase>
+						<phase>process-classes</phase>
 						<configuration>
 							<executable>ndk-build</executable>
 						</configuration>
