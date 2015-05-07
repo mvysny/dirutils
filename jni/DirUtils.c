@@ -8,7 +8,7 @@ JNIEXPORT jint JNICALL Java_sk_baka_android_DirUtils_mkdirInt
   (JNIEnv *env, jobject thisObj, jstring dirname) {
   
    const char *nativeString = (*env)->GetStringUTFChars(env, dirname, 0);
-   int result = mkdir(nativeString, 0x755);
+   int result = mkdir(nativeString, 0775);  // 0x775 NEFUNGUJE, JA SOM DEBIL: http://stackoverflow.com/questions/10147990/how-to-create-directory-with-right-permissons-using-c-on-posix
    (*env)->ReleaseStringUTFChars(env, dirname, nativeString);
    return result == 0 ? 0 : errno;
 }
