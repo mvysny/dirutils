@@ -4,7 +4,7 @@
 	<groupId>sk.baka.android</groupId>
 	<artifactId>dirutils</artifactId>
 	<packaging>jar</packaging>
-	<version>1.1-SNAPSHOT</version>
+	<version>1.2-SNAPSHOT</version>
 	<name>Android Directory Utils</name>
 	<inceptionYear>2015</inceptionYear>
 	<description>Android Directory/File Utils that do not suck</description>
