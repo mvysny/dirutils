@@ -20,7 +20,7 @@ First, add this repo to your pom.xml:
 </project>
 ```
 
-You can then add Maven dependency for `sk.baka.android:dirutils:1.0` to your project.
+You can then add Maven dependency for `sk.baka.android:dirutils:1.3` to your project.
 
 Afterwards, download the native part of the library here: http://www.baka.sk/maven2/sk/baka/android/dirutils/ (search for
 `dirutils-*-native.zip`) and unpack it to your Android project. Done!
