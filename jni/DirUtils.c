@@ -27,3 +27,13 @@ JNIEXPORT jint JNICALL Java_sk_baka_android_DirUtils_deleteInt
    (*env)->ReleaseStringUTFChars(env, path, nativeString);
    return result == 0 ? 0 : errno;
 }
+
+JNIEXPORT jint JNICALL Java_sk_baka_android_DirUtils_rename
+  (JNIEnv *env, jobject thisObj, jstring oldpath, jstring newpath) {
+   const char *nativeOldPath = (*env)->GetStringUTFChars(env, oldpath, 0);
+   const char *nativeNewPath = (*env)->GetStringUTFChars(env, newpath, 0);
+    int result = rename(nativeOldPath, nativeNewPath);
+   (*env)->ReleaseStringUTFChars(env, oldpath, nativeOldPath);
+   (*env)->ReleaseStringUTFChars(env, newpath, nativeNewPath);
+   return result == 0 ? 0 : errno;
+}

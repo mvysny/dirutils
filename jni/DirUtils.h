@@ -7,6 +7,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#undef sk_baka_android_DirUtils_EXDEV
+#define sk_baka_android_DirUtils_EXDEV 18L
 #undef sk_baka_android_DirUtils_BUFSIZE
 #define sk_baka_android_DirUtils_BUFSIZE 8192L
 /*
@@ -32,6 +34,14 @@ JNIEXPORT jstring JNICALL Java_sk_baka_android_DirUtils_strerror
  */
 JNIEXPORT jint JNICALL Java_sk_baka_android_DirUtils_deleteInt
   (JNIEnv *, jobject, jstring);
+
+/*
+ * Class:     sk_baka_android_DirUtils
+ * Method:    rename
+ * Signature: (Ljava/lang/String;Ljava/lang/String;)I
+ */
+JNIEXPORT jint JNICALL Java_sk_baka_android_DirUtils_rename
+  (JNIEnv *, jobject, jstring, jstring);
 
 #ifdef __cplusplus
 }

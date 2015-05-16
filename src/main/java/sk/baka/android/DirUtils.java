@@ -168,6 +168,14 @@ public class DirUtils {
     private native int deleteInt(String path);
 
     /**
+     * Cross-device link
+     * <p></p>
+     * Rename: oldpath and newpath are not on the same mounted file system. (Linux permits a file system to be mounted at
+     * multiple points, but rename() does not work across different mount points, even if the same file system is mounted on both.)
+     */
+    public static final int EXDEV = 18;
+
+    /**
      * Renames the file, overwriting the target file.
      * <p></p>
      * If the file cannot be renamed atomically (because target resides on a different mount point), the file is copied, then deleted.
@@ -179,13 +187,24 @@ public class DirUtils {
         if (source.equals(target)) {
             return;
         }
-        delete(target.getAbsolutePath());
-        if (!source.renameTo(target)) {
-            // try copy
+        delete(target);
+        final int errno = INSTANCE.rename(source.getAbsolutePath(), target.getAbsolutePath());
+        if (errno == EXDEV) {
+            // different mount points, we have to perform a copy
             copy(source, target);
             delete(source.getAbsolutePath());
+        } else {
+            check(errno, "rename '" + source + "' to '" + target + "'");
         }
     }
+
+    /**
+     * http://linux.die.net/man/2/rename
+     * @param oldpath
+     * @param newpath
+     * @return errno or 0 on success
+     */
+    private native int rename(String oldpath, String newpath);
 
     public static void copy(@NotNull File source, @NotNull File target) throws IOException {
         final FileOutputStream out = new FileOutputStream(target);
