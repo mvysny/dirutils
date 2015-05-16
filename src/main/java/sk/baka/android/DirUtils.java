@@ -320,4 +320,49 @@ public class DirUtils {
     }
 
     private static final String TAG = DirUtils.class.getSimpleName();
+
+    private native int getmod(String file);
+
+    public static int getMod(@NotNull String file) throws IOException {
+        int result = INSTANCE.getmod(file);
+        if ((result & 80000000) != 0) {
+            result = result & (~80000000);
+            check(result, "get mod of '" + file + "'");
+            throw new RuntimeException("unexpected for " + file);
+        }
+        return result;
+    }
+
+    private static final int S_IFMT = 00170000;
+    private static final int S_IFDIR = 0040000;
+    public static boolean S_ISDIR(int mod) {
+        return (((mod) & S_IFMT) == S_IFDIR);
+    }
+    private static final int STICKY = 01000;
+    private static final int S_IRUSR = 00400;
+    private static final int S_IWUSR = 00200;
+    private static final int S_IXUSR = 00100;
+    private static final int S_IRGRP = 00040;
+    private static final int S_IWGRP = 00020;
+    private static final int S_IXGRP = 00010;
+    private static final int S_IROTH = 00004;
+    private static final int S_IWOTH = 00002;
+    private static final int S_IXOTH = 00001;
+    @NotNull
+    public static String formatMod(int mod) {
+        final StringBuilder sb = new StringBuilder(10);
+        sb.append((S_ISDIR(mod)) ? "d" : "-");
+        sb.append((mod & S_IRUSR)!=0 ? "r" : "-");
+        sb.append((mod & S_IWUSR)!=0 ? "w" : "-");
+        sb.append((mod & S_IXUSR)!=0 ? "x" : "-");
+        sb.append((mod & S_IRGRP)!=0 ? "r" : "-");
+        sb.append((mod & S_IWGRP)!=0 ? "w" : "-");
+        sb.append((mod & S_IXGRP)!=0 ? "x" : "-");
+        sb.append((mod & S_IROTH)!=0 ? "r" : "-");
+        sb.append((mod & S_IWOTH)!=0 ? "w" : "-");
+        final boolean sticky = (mod & STICKY) != 0;
+        final boolean xoth = (mod & S_IXOTH)!=0;
+        sb.append(sticky ? (xoth ? 't' : 'T') : (xoth ? "x" : "-"));
+        return sb.toString();
+    }
 }
