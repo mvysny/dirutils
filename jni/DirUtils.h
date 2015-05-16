@@ -11,6 +11,30 @@ extern "C" {
 #define sk_baka_android_DirUtils_EXDEV 18L
 #undef sk_baka_android_DirUtils_BUFSIZE
 #define sk_baka_android_DirUtils_BUFSIZE 8192L
+#undef sk_baka_android_DirUtils_S_IFMT
+#define sk_baka_android_DirUtils_S_IFMT 61440L
+#undef sk_baka_android_DirUtils_S_IFDIR
+#define sk_baka_android_DirUtils_S_IFDIR 16384L
+#undef sk_baka_android_DirUtils_STICKY
+#define sk_baka_android_DirUtils_STICKY 512L
+#undef sk_baka_android_DirUtils_S_IRUSR
+#define sk_baka_android_DirUtils_S_IRUSR 256L
+#undef sk_baka_android_DirUtils_S_IWUSR
+#define sk_baka_android_DirUtils_S_IWUSR 128L
+#undef sk_baka_android_DirUtils_S_IXUSR
+#define sk_baka_android_DirUtils_S_IXUSR 64L
+#undef sk_baka_android_DirUtils_S_IRGRP
+#define sk_baka_android_DirUtils_S_IRGRP 32L
+#undef sk_baka_android_DirUtils_S_IWGRP
+#define sk_baka_android_DirUtils_S_IWGRP 16L
+#undef sk_baka_android_DirUtils_S_IXGRP
+#define sk_baka_android_DirUtils_S_IXGRP 8L
+#undef sk_baka_android_DirUtils_S_IROTH
+#define sk_baka_android_DirUtils_S_IROTH 4L
+#undef sk_baka_android_DirUtils_S_IWOTH
+#define sk_baka_android_DirUtils_S_IWOTH 2L
+#undef sk_baka_android_DirUtils_S_IXOTH
+#define sk_baka_android_DirUtils_S_IXOTH 1L
 /*
  * Class:     sk_baka_android_DirUtils
  * Method:    mkdirInt
@@ -42,6 +66,14 @@ JNIEXPORT jint JNICALL Java_sk_baka_android_DirUtils_deleteInt
  */
 JNIEXPORT jint JNICALL Java_sk_baka_android_DirUtils_rename
   (JNIEnv *, jobject, jstring, jstring);
+
+/*
+ * Class:     sk_baka_android_DirUtils
+ * Method:    getmod
+ * Signature: (Ljava/lang/String;)I
+ */
+JNIEXPORT jint JNICALL Java_sk_baka_android_DirUtils_getmod
+  (JNIEnv *, jobject, jstring);
 
 #ifdef __cplusplus
 }

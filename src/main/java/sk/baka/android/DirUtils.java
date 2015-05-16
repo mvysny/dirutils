@@ -61,7 +61,7 @@ public class DirUtils {
         if (directory.exists() && directory.isDirectory()) {
             return;
         }
-        check(INSTANCE.mkdirInt(directory.getAbsolutePath()), "create directory '" + directory + "'");
+        check(INSTANCE.mkdirInt(directory.getAbsolutePath()), "create directory '" + directory + "'", directory);
     }
 
     /**
@@ -123,7 +123,7 @@ public class DirUtils {
         if (!fileOrEmptyDirectory.exists()) {
             return;
         }
-        check(INSTANCE.deleteInt(fileOrEmptyDirectory.getAbsolutePath()), "delete '" + fileOrEmptyDirectory + "'");
+        check(INSTANCE.deleteInt(fileOrEmptyDirectory.getAbsolutePath()), "delete '" + fileOrEmptyDirectory + "'", fileOrEmptyDirectory);
     }
 
     /**
@@ -159,9 +159,10 @@ public class DirUtils {
         delete(path);
     }
 
-    private static void check(int errnum, String message) throws IOException {
+    private static void check(int errnum, String message, @Nullable File fileForSticky) throws IOException {
         if (errnum != 0) {
-            throw new IOException("Failed to " + message + ": #" + errnum + " " + INSTANCE.strerror(errnum));
+            throw new IOException("Failed to " + message + ": #" + errnum + " " + INSTANCE.strerror(errnum)
+            + (fileForSticky == null ? "" : " (" + getParentStickyness(fileForSticky) + ")"));
         }
     }
 
@@ -194,7 +195,7 @@ public class DirUtils {
             copy(source, target);
             delete(source.getAbsolutePath());
         } else {
-            check(errno, "rename '" + source + "' to '" + target + "'");
+            check(errno, "rename '" + source + "' to '" + target + "'", target);
         }
     }
 
@@ -323,14 +324,30 @@ public class DirUtils {
 
     private native int getmod(String file);
 
+    public static int getMod(@NotNull File file) throws IOException {
+        return getMod(file.getAbsoluteFile());
+    }
+
     public static int getMod(@NotNull String file) throws IOException {
         int result = INSTANCE.getmod(file);
         if ((result & 80000000) != 0) {
             result = result & (~80000000);
-            check(result, "get mod of '" + file + "'");
+            check(result, "get mod of '" + file + "'", null);
             throw new RuntimeException("unexpected for " + file);
         }
         return result;
+    }
+
+    private static String getParentStickyness(@NotNull File file) {
+        final File parent = file.getAbsoluteFile().getParentFile();
+        try {
+            final int mod = getMod(parent);
+            final boolean sticky = (mod & STICKY) != 0;
+            return sticky ? parent + " has sticky bit set! " + formatMod(mod) : parent.getName() + ":" + formatMod(mod);
+        } catch (IOException ex) {
+            Log.e(TAG, "Failed to get mod of " + parent, ex);
+            return "failed to get mod of " + parent + ": " + ex;
+        }
     }
 
     private static final int S_IFMT = 00170000;

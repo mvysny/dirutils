@@ -37,3 +37,12 @@ JNIEXPORT jint JNICALL Java_sk_baka_android_DirUtils_rename
    (*env)->ReleaseStringUTFChars(env, newpath, nativeNewPath);
    return result == 0 ? 0 : errno;
 }
+
+JNIEXPORT jint JNICALL Java_sk_baka_android_DirUtils_getmod
+  (JNIEnv *env, jobject thisObj, jstring path) {
+   const char *nativePath = (*env)->GetStringUTFChars(env, path, 0);
+   struct stat fileStat;
+   int result = stat(nativePath,&fileStat);
+   (*env)->ReleaseStringUTFChars(env, path, nativePath);
+   return result == 0 ? (fileStat.st_mode & (~0x80000000)) : (errno | 0x80000000);
+}
