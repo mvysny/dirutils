@@ -64,6 +64,11 @@ public class DirUtils {
         check(INSTANCE.mkdirInt(directory.getAbsolutePath()), "create directory '" + directory + "'", directory);
         final int mod = getMod(directory);
         if (isSticky(mod)) {
+            // you don't want to create sticky directory on SDCard:
+            // if you create a child directory, Android will immediately chown it to root
+            // that means that only a root can delete it
+            // that means that your application can no longer delete this directory nor the child directory
+            // Avoid sticky dirs at all costs.
             throw new IOException("I have just created a sticky directory!!! " + formatMod(mod) + ": " + directory);
         }
     }
