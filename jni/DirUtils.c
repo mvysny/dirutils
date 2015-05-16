@@ -15,7 +15,8 @@ JNIEXPORT jint JNICALL Java_sk_baka_android_DirUtils_mkdirInt
 
 JNIEXPORT jstring JNICALL Java_sk_baka_android_DirUtils_strerror
   (JNIEnv *env, jobject thisObj, jint errnum) {
-  const char *msg = strerror(errnum);
+  // cast to char* removes the following warning:  warning: initialization makes pointer from integer without a cast [enabled by default]
+  const char *msg = (char*) strerror(errnum);
   return (*env)->NewStringUTF(env, msg);
 }
 
