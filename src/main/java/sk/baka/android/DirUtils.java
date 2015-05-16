@@ -62,6 +62,10 @@ public class DirUtils {
             return;
         }
         check(INSTANCE.mkdirInt(directory.getAbsolutePath()), "create directory '" + directory + "'", directory);
+        final int mod = getMod(directory);
+        if (isSticky(mod)) {
+            throw new IOException("I have just created a sticky directory!!! " + formatMod(mod) + ": " + directory);
+        }
     }
 
     /**
@@ -325,13 +329,13 @@ public class DirUtils {
     private native int getmod(String file);
 
     public static int getMod(@NotNull File file) throws IOException {
-        return getMod(file.getAbsoluteFile());
+        return getMod(file.getAbsolutePath());
     }
 
     public static int getMod(@NotNull String file) throws IOException {
         int result = INSTANCE.getmod(file);
-        if ((result & 80000000) != 0) {
-            result = result & (~80000000);
+        if ((result & 0x80000000) != 0) {
+            result = result & (~0x80000000);
             check(result, "get mod of '" + file + "'", null);
             throw new RuntimeException("unexpected for " + file);
         }
@@ -342,7 +346,7 @@ public class DirUtils {
         final File parent = file.getAbsoluteFile().getParentFile();
         try {
             final int mod = getMod(parent);
-            final boolean sticky = (mod & STICKY) != 0;
+            final boolean sticky = isSticky(mod);
             return sticky ? parent + " has sticky bit set! " + formatMod(mod) : parent.getName() + ":" + formatMod(mod);
         } catch (IOException ex) {
             Log.e(TAG, "Failed to get mod of " + parent, ex);
@@ -354,6 +358,9 @@ public class DirUtils {
     private static final int S_IFDIR = 0040000;
     public static boolean S_ISDIR(int mod) {
         return (((mod) & S_IFMT) == S_IFDIR);
+    }
+    public static boolean isSticky(int mod) {
+        return (mod & STICKY) != 0;
     }
     private static final int STICKY = 01000;
     private static final int S_IRUSR = 00400;
@@ -377,7 +384,7 @@ public class DirUtils {
         sb.append((mod & S_IXGRP)!=0 ? "x" : "-");
         sb.append((mod & S_IROTH)!=0 ? "r" : "-");
         sb.append((mod & S_IWOTH)!=0 ? "w" : "-");
-        final boolean sticky = (mod & STICKY) != 0;
+        final boolean sticky = isSticky(mod);
         final boolean xoth = (mod & S_IXOTH)!=0;
         sb.append(sticky ? (xoth ? 't' : 'T') : (xoth ? "x" : "-"));
         return sb.toString();
