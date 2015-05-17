@@ -352,7 +352,7 @@ public class DirUtils {
         try {
             final int mod = getMod(parent);
             final boolean sticky = isSticky(mod);
-            return sticky ? parent + " has sticky bit set! " + formatMod(mod) : parent.getName() + ":" + formatMod(mod);
+            return sticky ? parent + " has sticky bit set! " + formatMod(mod) + " - please see Aedict FAQ for more, and also https://code.google.com/p/android/issues/detail?id=173708" : parent.getName() + ":" + formatMod(mod);
         } catch (IOException ex) {
             Log.e(TAG, "Failed to get mod of " + parent, ex);
             return "failed to get mod of " + parent + ": " + ex;
@@ -379,7 +379,10 @@ public class DirUtils {
     private static final int S_IXOTH = 00001;
     @NotNull
     public static String formatMod(int mod) {
-        final StringBuilder sb = new StringBuilder(10);
+        final StringBuilder sb = new StringBuilder(16);
+        sb.append('0');
+        sb.append(Integer.toOctalString(mod & 07777));
+        sb.append(':');
         sb.append((S_ISDIR(mod)) ? "d" : "-");
         sb.append((mod & S_IRUSR)!=0 ? "r" : "-");
         sb.append((mod & S_IWUSR)!=0 ? "w" : "-");
