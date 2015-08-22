@@ -154,7 +154,7 @@
 								<phase>process-classes</phase>
 								<configuration>
 									<executable>javah</executable>
-									<commandlineArgs>-classpath target/classes -o jni/DirUtils.h sk.baka.android.DirUtils</commandlineArgs>
+									<commandlineArgs>-classpath target/classes -o jni/DirUtils.h sk.baka.android.spi.AndroidFS</commandlineArgs>
 								</configuration>
 							</execution>
 							<execution>
