@@ -40,7 +40,7 @@ extern "C" {
  * Method:    mkdirInt
  * Signature: (Ljava/lang/String;)I
  */
-JNIEXPORT jint JNICALL Java_sk_baka_android_DirUtils_mkdirInt
+JNIEXPORT jint JNICALL Java_sk_baka_android_spi_AndroidFS_mkdirInt
   (JNIEnv *, jobject, jstring);
 
 /*
@@ -48,7 +48,7 @@ JNIEXPORT jint JNICALL Java_sk_baka_android_DirUtils_mkdirInt
  * Method:    strerror
  * Signature: (I)Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_sk_baka_android_DirUtils_strerror
+JNIEXPORT jstring JNICALL Java_sk_baka_android_spi_AndroidFS_strerror
   (JNIEnv *, jobject, jint);
 
 /*
@@ -56,7 +56,7 @@ JNIEXPORT jstring JNICALL Java_sk_baka_android_DirUtils_strerror
  * Method:    deleteInt
  * Signature: (Ljava/lang/String;)I
  */
-JNIEXPORT jint JNICALL Java_sk_baka_android_DirUtils_deleteInt
+JNIEXPORT jint JNICALL Java_sk_baka_android_spi_AndroidFS_deleteInt
   (JNIEnv *, jobject, jstring);
 
 /*
@@ -64,7 +64,7 @@ JNIEXPORT jint JNICALL Java_sk_baka_android_DirUtils_deleteInt
  * Method:    rename
  * Signature: (Ljava/lang/String;Ljava/lang/String;)I
  */
-JNIEXPORT jint JNICALL Java_sk_baka_android_DirUtils_rename
+JNIEXPORT jint JNICALL Java_sk_baka_android_spi_AndroidFS_rename
   (JNIEnv *, jobject, jstring, jstring);
 
 /*
@@ -72,7 +72,7 @@ JNIEXPORT jint JNICALL Java_sk_baka_android_DirUtils_rename
  * Method:    getmod
  * Signature: (Ljava/lang/String;)I
  */
-JNIEXPORT jint JNICALL Java_sk_baka_android_DirUtils_getmod
+JNIEXPORT jint JNICALL Java_sk_baka_android_spi_AndroidFS_getmod
   (JNIEnv *, jobject, jstring);
 
 #ifdef __cplusplus

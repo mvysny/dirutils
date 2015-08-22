@@ -13,23 +13,19 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import android.util.Log;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import sk.baka.android.spi.AndroidFS;
+import sk.baka.android.spi.DumbJavaFS;
+import sk.baka.android.spi.FileSystemSpi;
+import sk.baka.android.spi.Java7FS;
 
 /**
  * @author mvy
  */
 public class DirUtils {
-    static {
-        System.loadLibrary("dirutils");
-    }
-
-    private native int mkdirInt(String directory);
-
-    private native String strerror(int errnum);
-
     private DirUtils() {
     }
-
-    private static final DirUtils INSTANCE = new DirUtils();
 
     /**
      * Creates given directory. Does nothing if the directory already exists. Does not create parent directory - use {@link #mkdirs(String)} for that.
@@ -61,16 +57,7 @@ public class DirUtils {
         if (directory.exists() && directory.isDirectory()) {
             return;
         }
-        check(INSTANCE.mkdirInt(directory.getAbsolutePath()), "create directory '" + directory + "'", directory);
-        final int mod = getMod(directory);
-        if (isSticky(mod)) {
-            // you don't want to create sticky directory on SDCard:
-            // if you create a child directory, Android will immediately chown it to root
-            // that means that only a root can delete it
-            // that means that your application can no longer delete this directory nor the child directory
-            // Avoid sticky dirs at all costs.
-            throw new IOException("I have just created a sticky directory!!! " + formatMod(mod) + ": " + directory);
-        }
+        get().mkdir(directory);
     }
 
     /**
@@ -132,7 +119,7 @@ public class DirUtils {
         if (!fileOrEmptyDirectory.exists()) {
             return;
         }
-        check(INSTANCE.deleteInt(fileOrEmptyDirectory.getAbsolutePath()), "delete '" + fileOrEmptyDirectory + "'", fileOrEmptyDirectory);
+        get().delete(fileOrEmptyDirectory);
     }
 
     /**
@@ -168,23 +155,6 @@ public class DirUtils {
         delete(path);
     }
 
-    private static void check(int errnum, String message, @Nullable File fileForSticky) throws IOException {
-        if (errnum != 0) {
-            throw new IOException("Failed to " + message + ": #" + errnum + " " + INSTANCE.strerror(errnum)
-            + (fileForSticky == null ? "" : " (" + getParentStickyness(fileForSticky) + ")"));
-        }
-    }
-
-    private native int deleteInt(String path);
-
-    /**
-     * Cross-device link
-     * <p></p>
-     * Rename: oldpath and newpath are not on the same mounted file system. (Linux permits a file system to be mounted at
-     * multiple points, but rename() does not work across different mount points, even if the same file system is mounted on both.)
-     */
-    public static final int EXDEV = 18;
-
     /**
      * Renames the file, overwriting the target file.
      * <p></p>
@@ -198,23 +168,11 @@ public class DirUtils {
             return;
         }
         delete(target);
-        final int errno = INSTANCE.rename(source.getAbsolutePath(), target.getAbsolutePath());
-        if (errno == EXDEV) {
-            // different mount points, we have to perform a copy
+        if (!get().rename(source, target)) {
             copy(source, target);
             delete(source.getAbsolutePath());
-        } else {
-            check(errno, "rename '" + source + "' to '" + target + "'", target);
         }
     }
-
-    /**
-     * http://linux.die.net/man/2/rename
-     * @param oldpath
-     * @param newpath
-     * @return errno or 0 on success
-     */
-    private native int rename(String oldpath, String newpath);
 
     public static void copy(@NotNull File source, @NotNull File target) throws IOException {
         final FileOutputStream out = new FileOutputStream(target);
@@ -260,7 +218,7 @@ public class DirUtils {
             try {
                 outputStream.flush();
             } catch (Exception ex) {
-                Log.e(TAG, "Failed to flush output stream", ex);
+                log.error("Failed to flush output stream", ex);
             }
             if (closeIn) {
                 closeQuietly(inputStream);
@@ -280,7 +238,7 @@ public class DirUtils {
             try {
                 s.close();
             } catch (Throwable t) {
-                Log.i(TAG, "Failed to close " + s, t);
+                log.info("Failed to close " + s, t);
             }
         }
     }
@@ -290,11 +248,11 @@ public class DirUtils {
      * @param fileOrDir the file or directory to delete, not null.
      */
     @Contract("null -> fail")
-    public static void deleteQuietly(@NotNull File fileOrDir) {
+    public static void deleteNonRecQuietly(@NotNull File fileOrDir) {
         try {
             delete(fileOrDir);
         } catch (IOException ex) {
-            Log.e(TAG, "Failed to delete " + fileOrDir, ex);
+            log.error("Failed to delete " + fileOrDir, ex);
         }
     }
 
@@ -303,8 +261,8 @@ public class DirUtils {
      * @param fileOrDir the file or directory to delete, not null.
      */
     @Contract("null -> fail")
-    public static void deleteQuietly(@NotNull String fileOrDir) {
-        deleteQuietly(new File(fileOrDir));
+    public static void deleteNonRecQuietly(@NotNull String fileOrDir) {
+        deleteNonRecQuietly(new File(fileOrDir));
     }
 
     /**
@@ -316,7 +274,7 @@ public class DirUtils {
         try {
             deleteRecursively(fileOrDir);
         } catch (IOException ex) {
-            Log.e(TAG, "Failed to delete " + fileOrDir, ex);
+            log.error("Failed to delete " + fileOrDir, ex);
         }
     }
 
@@ -329,34 +287,31 @@ public class DirUtils {
         deleteRecursivelyQuietly(new File(fileOrDir));
     }
 
-    private static final String TAG = DirUtils.class.getSimpleName();
+    private static final Logger log = LoggerFactory.getLogger(DirUtils.class);
 
-    private native int getmod(String file);
-
-    public static int getMod(@NotNull File file) throws IOException {
+    public static Integer getMod(@NotNull File file) throws IOException {
         return getMod(file.getAbsolutePath());
     }
 
-    public static int getMod(@NotNull String file) throws IOException {
-        int result = INSTANCE.getmod(file);
-        if ((result & 0x80000000) != 0) {
-            result = result & (~0x80000000);
-            check(result, "get mod of '" + file + "'", null);
-            throw new RuntimeException("unexpected for " + file);
+    @Nullable
+    private static FileSystemSpi SPI;
+    @NotNull
+    private static FileSystemSpi get() {
+        if (SPI == null) {
+            if (AndroidFS.isAvail()) {
+                SPI = new AndroidFS();
+            } else if (Java7FS.isAvail()) {
+                SPI = new Java7FS();
+            } else {
+                // fallback
+                SPI = new DumbJavaFS();
+            }
         }
-        return result;
+        return SPI;
     }
 
-    private static String getParentStickyness(@NotNull File file) {
-        final File parent = file.getAbsoluteFile().getParentFile();
-        try {
-            final int mod = getMod(parent);
-            final boolean sticky = isSticky(mod);
-            return sticky ? parent + " has sticky bit set! " + formatMod(mod) + " - please see Aedict FAQ for more, and also https://code.google.com/p/android/issues/detail?id=173708" : parent.getName() + ":" + formatMod(mod);
-        } catch (IOException ex) {
-            Log.e(TAG, "Failed to get mod of " + parent, ex);
-            return "failed to get mod of " + parent + ": " + ex;
-        }
+    public static Integer getMod(@NotNull String file) throws IOException {
+        return get().getMod(file);
     }
 
     private static final int S_IFMT = 00170000;
