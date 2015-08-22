@@ -29,8 +29,11 @@ public class DumbJavaFS implements FileSystemSpi {
 
     @Override
     public void mkdir(@NotNull File directory) throws IOException {
-        if (!directory.mkdir()) {
-            throw new IOException("Failed to create " + directory + " for unknown reason");
+        if (directory.exists() && !directory.isDirectory()) {
+            throw new IOException("'" + directory + "' points to a file");
+        }
+        if (!directory.exists() && !directory.mkdirs()) {
+            throw new IOException("The directory '" + directory + "' couldn't be created: " + (directory.getParentFile().canWrite() ? directory.getParent() + " not writable" : "unknown"));
         }
     }
 }

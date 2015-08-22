@@ -44,7 +44,7 @@ public interface FileSystemSpi {
      * Fails if there already is a file with given name, or if the directory couldn't be created.
      * <p></p>
      * As opposed to dumb {@link File#mkdir()} this method throws {@link IOException} with informative message if the function fails.
-     * @param directory the directory to create, not null. Must be an absolute path (must start with a slash).
+     * @param directory the directory to create, not null. Must be an absolute path (must start with a slash). May exist, and may point to a file.
      * @throws IOException if directory create fails.
      * @throws IllegalArgumentException if given path is not absolute.
      */
