@@ -4,14 +4,14 @@
 	<groupId>sk.baka.android</groupId>
 	<artifactId>dirutils</artifactId>
 	<packaging>jar</packaging>
-	<version>1.6</version>
+	<version>1.7-SNAPSHOT</version>
 	<name>Android Directory Utils</name>
 	<inceptionYear>2015</inceptionYear>
 	<description>Android Directory/File Utils that do not suck</description>
 	<url>http://baka.sk/aedict/</url>
 	<scm>
 		<connection>scm:git:git@github.com:mvysny/dirutils.git</connection>
-    <tag>dirutils-1.6</tag>
+    <tag>HEAD</tag>
   </scm>
 
 	<distributionManagement>
