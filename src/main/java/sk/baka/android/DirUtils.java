@@ -100,19 +100,19 @@ public class DirUtils {
     /**
      * Deletes given file or empty directory. Does nothing if there is no such file or directory with given name.
      * @param fileOrEmptyDirectory the file/directory to delete, not null. Must be an absolute path (must start with a slash).
-     * @throws IOException if directory create fails.
+     * @throws IOException if directory delete fails, for example because the directory is not empty.
      * @throws IllegalArgumentException if given path is not absolute.
      */
-    public static void delete(@NotNull String fileOrEmptyDirectory) throws IOException {
-        delete(new File(fileOrEmptyDirectory));
+    public static void deleteNonRec(@NotNull String fileOrEmptyDirectory) throws IOException {
+        deleteNonRec(new File(fileOrEmptyDirectory));
     }
     /**
      * Deletes given file or empty directory. Does nothing if there is no such file or directory with given name.
      * @param fileOrEmptyDirectory the file/directory to delete, not null. Must be an absolute path (must start with a slash).
-     * @throws IOException if directory create fails.
+     * @throws IOException if directory delete fails, for example because the directory is not empty.
      * @throws IllegalArgumentException if given path is not absolute.
      */
-    public static void delete(@NotNull File fileOrEmptyDirectory) throws IOException {
+    public static void deleteNonRec(@NotNull File fileOrEmptyDirectory) throws IOException {
         if (!fileOrEmptyDirectory.isAbsolute()) {
             throw new IllegalArgumentException("Parameter fileOrEmptyDirectory: invalid value " + fileOrEmptyDirectory + ": must be an absolute path");
         }
@@ -152,7 +152,7 @@ public class DirUtils {
                 }
             }
         }
-        delete(path);
+        deleteNonRec(path);
     }
 
     /**
@@ -167,10 +167,10 @@ public class DirUtils {
         if (source.equals(target)) {
             return;
         }
-        delete(target);
+        deleteNonRec(target);
         if (!get().rename(source, target)) {
             copy(source, target);
-            delete(source.getAbsolutePath());
+            deleteNonRec(source.getAbsolutePath());
         }
     }
 
@@ -250,7 +250,7 @@ public class DirUtils {
     @Contract("null -> fail")
     public static void deleteNonRecQuietly(@NotNull File fileOrDir) {
         try {
-            delete(fileOrDir);
+            deleteNonRec(fileOrDir);
         } catch (IOException ex) {
             log.error("Failed to delete " + fileOrDir, ex);
         }
