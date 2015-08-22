@@ -32,7 +32,8 @@ public class DumbJavaFS implements FileSystemSpi {
         if (directory.exists() && !directory.isDirectory()) {
             throw new IOException("'" + directory + "' points to a file");
         }
-        if (!directory.exists() && !directory.mkdirs()) {
+        // mkdir, not mkdirs() - according to the contract, FileSystemSpi.mkdir() only creates one dir.
+        if (!directory.exists() && !directory.mkdir()) {
             throw new IOException("The directory '" + directory + "' couldn't be created: " + (directory.getParentFile().canWrite() ? directory.getParent() + " not writable" : "unknown"));
         }
     }
