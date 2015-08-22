@@ -306,6 +306,7 @@ public class DirUtils {
                 // fallback
                 SPI = new DumbJavaFS();
             }
+            log.info("DirUtils: using SPI " + SPI.getClass().getSimpleName());
         }
         return SPI;
     }
