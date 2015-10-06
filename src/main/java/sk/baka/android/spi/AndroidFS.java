@@ -11,7 +11,7 @@ import java.io.File;
 import java.io.IOException;
 
 /**
- * Android FS.
+ * Android FS. Uses native lib which calls standard Linux FS functions; exit codes are transformed to informative {@link IOException}s.
  * @author mvy
  */
 public class AndroidFS implements FileSystemSpi {
@@ -31,16 +31,42 @@ public class AndroidFS implements FileSystemSpi {
         }
     }
 
+    /**
+     * Checks if this SPI is available.
+     * @return true if we are running on Android, false if not.
+     */
     public static boolean isAvail() {
         return AVAIL;
     }
 
+    /**
+     * Deletes given path: http://linux.die.net/man/3/remove
+     * @param path the file or directory to delete, not null, should be absolute. Fails to delete non-empty directory.
+     * @return 0 if everything went okay, non-zero error code on I/O error. Use {@link #strerror(int)} to obtain error message.
+     */
     private native int deleteInt(String path);
 
+    /**
+     * Creates given directory, with perms of 0775. Cannot create more than one directory per one call.
+     * <p></p>
+     * Uses http://linux.die.net/man/2/mkdir
+     * @param directory the directory to create, not null, should be absolute.
+     * @return 0 if everything went okay, non-zero error code on I/O error. Use {@link #strerror(int)} to obtain error message.
+     */
     private native int mkdirInt(String directory);
 
+    /**
+     * Returns error message for given error code: http://linux.die.net/man/3/strerror
+     * @param errnum error code produced by one of native methods.
+     * @return non-null string containing the error message.
+     */
     private native String strerror(int errnum);
 
+    /**
+     * Returns the mod of given file: http://linux.die.net/man/2/stat
+     * @param file the file or dir, not null, should be absolute.
+     * @return the file mod. If highest bit is set, the function failed. Clear the highest bit to obtain the error code.
+     */
     private native int getmod(String file);
 
     /**

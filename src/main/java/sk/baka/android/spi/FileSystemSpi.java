@@ -6,7 +6,7 @@ import java.io.File;
 import java.io.IOException;
 
 /**
- * Zakladne operacie pre FS ktore pouziva {@link sk.baka.android.DirUtils}.
+ * Basic operations every FS must implement. {@link sk.baka.android.DirUtils} uses this as its backend.
  * @author mvy
  */
 public interface FileSystemSpi {

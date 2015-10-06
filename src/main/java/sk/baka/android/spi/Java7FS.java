@@ -10,6 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 
 /**
+ * Uses new file methods added in Java 7.
  * @author mvy
  */
 public class Java7FS implements FileSystemSpi {
