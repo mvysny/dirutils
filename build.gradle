@@ -2,7 +2,7 @@ defaultTasks 'clean', 'build', 'publishToMavenLocal'
 
 project.ext.groupId = 'sk.baka.android'
 project.ext.artifactId = 'dirutils'
-project.version = '1.7'
+project.version = '1.7-SNAPSHOT'
 
 buildscript {
     ext.kotlin_version = '1.0.1-2'
