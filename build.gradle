@@ -1,5 +1,9 @@
 defaultTasks 'clean', 'build', 'publishToMavenLocal'
 
+project.ext.groupId = 'sk.baka.android'
+project.ext.artifactId = 'dirutils'
+project.version = '1.7'
+
 buildscript {
     ext.kotlin_version = '1.0.1-2'
     repositories {
@@ -29,7 +33,7 @@ dependencies {
     testCompile 'junit:junit:4.12'
     compile 'org.slf4j:slf4j-api:1.7.13'
     testCompile 'ch.qos.logback:logback-classic:1.1.3'
-    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    compileOnly "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     testCompile "org.jetbrains.kotlin:kotlin-test:$kotlin_version"
     // ziadne dalsie dependencies, pouziva sa vsade!
 }
@@ -43,22 +47,37 @@ task sourceJar(type: Jar, dependsOn: classes) {
     from sourceSets.main.allSource
 }
 
+task javah(type: Exec, description: 'Generates C headers by running javah', group: 'build', dependsOn: classes) {
+    commandLine 'javah', '-classpath', 'build/classes/main', '-o', 'jni/DirUtils.h', 'sk.baka.android.spi.AndroidFS'
+}
+
+task ndkBuild(type: Exec, description: 'Runs the NDK build', group: 'build', dependsOn: javah) {
+    commandLine 'ndk-build'
+}
+
+task zipNatives(type: Zip, description: 'Zips the native .so libs', group: 'build', dependsOn: ndkBuild) {
+    classifier = 'native'
+    from 'libs'
+    into 'libs'
+}
+
+build.dependsOn zipNatives
+
 apply plugin: 'maven-publish'
 
 publishing {
     publications {
         mavenJava(MavenPublication) {
-            groupId 'sk.baka.android'
-            artifactId 'dirutils'
-            version '1.7'
+            groupId project.groupId
+            artifactId project.artifactId
             from components.java
             artifact sourceJar {
-                classifier "sources"
+                classifier 'sources'
+            }
+            artifact zipNatives {
+                classifier 'native'
             }
         }
     }
 }
 
-task javah(type: Exec, description: 'Generates C headers by running javah', group: 'build', dependsOn: classes) {
-    commandLine 'javah', '-classpath', 'build/classes/main', '-o', 'jni/DirUtils.h', 'sk.baka.android.spi.AndroidFS'
-}
