@@ -8,11 +8,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import android.util.Log;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import sk.baka.android.spi.AndroidFS;
@@ -188,7 +186,6 @@ public class DirUtils {
      * @param inputStream the input stream, always closed.
      * @param outputStream the output stream, never closed.
      */
-    @Contract("null, _ -> fail")
     public static void copy(@NotNull InputStream inputStream, @NotNull OutputStream outputStream) throws IOException {
         copy(inputStream, outputStream, true, false);
     }
@@ -202,7 +199,6 @@ public class DirUtils {
      * @param closeIn if true, inputStream is closed.
      * @param closeOut if true, outputStream is closed.
      */
-    @Contract("null, _ -> fail")
     public static void copy(@NotNull InputStream inputStream, @NotNull OutputStream outputStream, boolean closeIn, boolean closeOut) throws IOException {
         try {
             final byte[] buf = new byte[BUFSIZE];
@@ -247,7 +243,6 @@ public class DirUtils {
      * Deletes given file or dictionary. Does not throw {@link IOException}. Does NOT delete non-empty directory.
      * @param fileOrDir the file or directory to delete, not null.
      */
-    @Contract("null -> fail")
     public static void deleteNonRecQuietly(@NotNull File fileOrDir) {
         try {
             deleteNonRec(fileOrDir);
@@ -260,16 +255,14 @@ public class DirUtils {
      * Deletes given file or dictionary. Does not throw {@link IOException}. Does NOT delete non-empty directory.
      * @param fileOrDir the file or directory to delete, not null.
      */
-    @Contract("null -> fail")
     public static void deleteNonRecQuietly(@NotNull String fileOrDir) {
         deleteNonRecQuietly(new File(fileOrDir));
     }
 
     /**
-     * Deletes given file or dictionary. Does not throw {@link IOException}. Does NOT delete non-empty directory.
+     * Deletes given file or dictionary. Does not throw {@link IOException}.
      * @param fileOrDir the file or directory to delete, not null.
      */
-    @Contract("null -> fail")
     public static void deleteRecursivelyQuietly(@NotNull File fileOrDir) {
         try {
             deleteRecursively(fileOrDir);
@@ -279,10 +272,9 @@ public class DirUtils {
     }
 
     /**
-     * Deletes given file or dictionary. Does not throw {@link IOException}. Does NOT delete non-empty directory.
+     * Deletes given file or dictionary. Does not throw {@link IOException}.
      * @param fileOrDir the file or directory to delete, not null.
      */
-    @Contract("null -> fail")
     public static void deleteRecursivelyQuietly(@NotNull String fileOrDir) {
         deleteRecursivelyQuietly(new File(fileOrDir));
     }
