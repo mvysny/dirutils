@@ -27,6 +27,14 @@ JNIEXPORT jint JNICALL Java_sk_baka_android_spi_AndroidFS_mkdirInt
 
 /*
  * Class:     sk_baka_android_spi_AndroidFS
+ * Method:    mkdirInt2
+ * Signature: (Ljava/lang/String;I)I
+ */
+JNIEXPORT jint JNICALL Java_sk_baka_android_spi_AndroidFS_mkdirInt2
+  (JNIEnv *, jobject, jstring, jint);
+
+/*
+ * Class:     sk_baka_android_spi_AndroidFS
  * Method:    strerror
  * Signature: (I)Ljava/lang/String;
  */

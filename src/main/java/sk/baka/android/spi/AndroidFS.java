@@ -56,6 +56,15 @@ public class AndroidFS implements FileSystemSpi {
     private native int mkdirInt(String directory);
 
     /**
+     * Creates given directory, with given permissions. Cannot create more than one directory per one call.
+     * <p></p>
+     * Uses http://linux.die.net/man/2/mkdir
+     * @param directory the directory to create, not null, should be absolute.
+     * @return 0 if everything went okay, non-zero error code on I/O error. Use {@link #strerror(int)} to obtain error message.
+     */
+    private native int mkdirInt2(String directory, int permissions);
+
+    /**
      * Returns error message for given error code: http://linux.die.net/man/3/strerror
      * @param errnum error code produced by one of native methods.
      * @return non-null string containing the error message.
@@ -118,6 +127,10 @@ public class AndroidFS implements FileSystemSpi {
     @Override
     public void delete(@NotNull File fileOrEmptyDirectory) throws IOException {
         check(deleteInt(fileOrEmptyDirectory.getAbsolutePath()), "delete '" + fileOrEmptyDirectory + "'", fileOrEmptyDirectory);
+    }
+
+    public void mkdir(@NotNull File directory, int permissions) throws IOException {
+        check(mkdirInt2(directory.getAbsolutePath(), permissions), "create directory '" + directory + "'", directory);
     }
 
     @Override
