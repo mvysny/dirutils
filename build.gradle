@@ -1,6 +1,6 @@
 defaultTasks 'clean', 'build', 'publishToMavenLocal'
 
-project.ext.groupId = 'sk.baka.android'
+project.group = 'sk.baka.android'
 project.ext.artifactId = 'dirutils'
 project.version = '1.7-SNAPSHOT'
 
@@ -62,12 +62,13 @@ task zipNatives(type: Zip, description: 'Zips the native .so libs', group: 'buil
 
 build.dependsOn zipNatives
 
+// maven integration
 apply plugin: 'maven-publish'
 
 publishing {
     publications {
         mavenJava(MavenPublication) {
-            groupId project.groupId
+            groupId project.group
             artifactId project.artifactId
             from components.java
             artifact sourceJar {
@@ -78,5 +79,16 @@ publishing {
             }
         }
     }
+    repositories {
+        maven {
+            name 'rtsk'
+            credentials {
+                username 'moto'
+                // remove once https://discuss.gradle.org/t/public-key-auth-for-sftp/10051 is fixed
+                String pw = new File("${System.properties['user.home']}/.rtsk").text.trim()
+                password pw
+            }
+            url 'sftp://rt.sk:22/home/moto/public_html/maven2'
+        }
+    }
 }
-
