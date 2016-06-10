@@ -287,10 +287,24 @@ public class DirUtils {
 
     @Nullable
     private static FileSystemSpi SPI;
+    @Nullable
+    private static volatile FileSystemSpi FORCE_SPI;
+
+    /**
+     * Allows you to force a particular SPI, bypassing the detection routine.
+     * @param fileSystemSpi the SPI to use, null to enable the auto-detection routine.
+     */
+    public static synchronized void set(@Nullable FileSystemSpi fileSystemSpi) {
+        SPI = null;
+        FORCE_SPI = fileSystemSpi;
+    }
+
     @NotNull
     private static FileSystemSpi get() {
         if (SPI == null) {
-            if (AndroidFS.isAvail()) {
+            if (FORCE_SPI != null) {
+                SPI = FORCE_SPI;
+            } else if (AndroidFS.isAvail()) {
                 SPI = new AndroidFS();
             } else if (Java7FS.isAvail()) {
                 SPI = new Java7FS();
