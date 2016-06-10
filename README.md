@@ -38,6 +38,6 @@ Afterwards, download the native part of the library here: http://www.baka.sk/mav
 
 You will need to install Android NDK and add the `ndk-build` script to your PATH. Then, head to dirutil's root and type
 ```sh
-$ mvn clean install
+$ ./gradlew
 ```
 
