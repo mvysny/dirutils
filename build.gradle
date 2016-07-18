@@ -5,7 +5,7 @@ project.ext.artifactId = 'dirutils'
 project.version = '1.9-SNAPSHOT'
 
 buildscript {
-    ext.kotlin_version = '1.0.2'
+    ext.kotlin_version = '1.0.3'
     repositories {
         mavenCentral()
     }
