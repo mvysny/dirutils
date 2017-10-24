@@ -1,6 +1,5 @@
 package sk.baka.android.spi;
 
-import android.util.Log;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -136,8 +135,14 @@ public class AndroidFS implements FileSystemSpi {
     @Override
     public void mkdir(@NotNull File directory) throws IOException {
         check(mkdirInt(directory.getAbsolutePath()), "create directory '" + directory + "'", directory);
-        final Integer mod = getMod(directory.getAbsolutePath());
-        if (mod != null && DirUtils.isSticky(mod)) {
+        Integer mod = null;
+        try {
+            mod = getMod(directory.getAbsolutePath());
+        } catch (IOException ex) {
+            log.error("Failed to call getMod", ex);
+        }
+        final boolean isSticky = mod != null && DirUtils.isSticky(mod);
+        if (isSticky) {
             // you don't want to create sticky directory on SDCard:
             // if you create a child directory, Android will immediately chown it to root
             // that means that only a root can delete it
