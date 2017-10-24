@@ -45,7 +45,7 @@ task sourceJar(type: Jar, dependsOn: classes) {
 }
 
 task javah(type: Exec, description: 'Generates C headers by running javah', group: 'build', dependsOn: classes) {
-    commandLine 'javah', '-classpath', 'build/classes/main', '-o', 'jni/DirUtils.h', 'sk.baka.android.spi.AndroidFS'
+    commandLine 'javah', '-classpath', 'build/classes/java/main', '-o', 'jni/DirUtils.h', 'sk.baka.android.spi.AndroidFS'
 }
 
 task ndkBuild(type: Exec, description: 'Runs the NDK build', group: 'build', dependsOn: javah) {
