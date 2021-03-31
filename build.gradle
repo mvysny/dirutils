@@ -5,7 +5,7 @@ project.ext.artifactId = 'dirutils'
 project.version = '1.10-SNAPSHOT'
 
 buildscript {
-    ext.kotlin_version = '1.1.51'
+    ext.kotlin_version = '1.4.32'
     repositories {
         mavenCentral()
     }
@@ -27,12 +27,12 @@ repositories {
 
 dependencies {
     compileOnly 'com.google.android:android:2.2.1'
-    testCompile 'junit:junit:4.12'
-    compile 'org.slf4j:slf4j-api:1.7.25'
-    testCompile 'ch.qos.logback:logback-classic:1.2.3'
+    testCompile("junit:junit:4.12")
+    compile("org.slf4j:slf4j-api:1.7.30")
+    testImplementation("org.slf4j:slf4j-simple:1.7.30")
     compileOnly "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     testCompile "org.jetbrains.kotlin:kotlin-test:$kotlin_version"
-    // ziadne dalsie dependencies, pouziva sa vsade!
+    // don't add any further dependencies, to keep Android app's size at check.
 }
 
 clean.doLast {
@@ -75,18 +75,6 @@ publishing {
             artifact zipNatives {
                 classifier 'native'
             }
-        }
-    }
-    repositories {
-        maven {
-            name 'rtsk'
-            credentials {
-                username 'moto'
-                // remove once https://discuss.gradle.org/t/public-key-auth-for-sftp/10051 is fixed
-                String pw = new File("${System.properties['user.home']}/.rtsk").text.trim()
-                password pw
-            }
-            url 'sftp://rt.sk:22/home/moto/public_html/maven2'
         }
     }
 }
