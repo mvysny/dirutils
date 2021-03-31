@@ -304,10 +304,12 @@ public class DirUtils {
         if (SPI == null) {
             if (FORCE_SPI != null) {
                 SPI = FORCE_SPI;
+            } else if (Java7FS.isAvail()) {
+                // prefer Java7FS on Android 26+ before AndroidFS: AndroidFS uses native stuff and
+                // it's safer to use the Java API.
+                SPI = new Java7FS();
             } else if (AndroidFS.isAvail()) {
                 SPI = new AndroidFS();
-            } else if (Java7FS.isAvail()) {
-                SPI = new Java7FS();
             } else {
                 // fallback
                 SPI = new DumbJavaFS();
