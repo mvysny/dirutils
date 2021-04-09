@@ -13,7 +13,6 @@ import org.jetbrains.annotations.Nullable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import sk.baka.android.spi.AndroidFS;
 import sk.baka.android.spi.DumbJavaFS;
 import sk.baka.android.spi.FileSystemSpi;
 import sk.baka.android.spi.Java7FS;
@@ -305,11 +304,7 @@ public class DirUtils {
             if (FORCE_SPI != null) {
                 SPI = FORCE_SPI;
             } else if (Java7FS.isAvail()) {
-                // prefer Java7FS on Android 26+ before AndroidFS: AndroidFS uses native stuff and
-                // it's safer to use the Java API.
                 SPI = new Java7FS();
-            } else if (AndroidFS.isAvail()) {
-                SPI = new AndroidFS();
             } else {
                 // fallback
                 SPI = new DumbJavaFS();
@@ -321,44 +316,5 @@ public class DirUtils {
 
     public static Integer getMod(@NotNull String file) throws IOException {
         return get().getMod(file);
-    }
-
-    private static final int S_IFMT = 00170000;
-    private static final int S_IFDIR = 0040000;
-    public static boolean S_ISDIR(int mod) {
-        return (((mod) & S_IFMT) == S_IFDIR);
-    }
-    public static boolean isSticky(int mod) {
-        return (mod & STICKY) != 0;
-    }
-    private static final int STICKY = 01000;
-    private static final int S_IRUSR = 00400;
-    private static final int S_IWUSR = 00200;
-    private static final int S_IXUSR = 00100;
-    private static final int S_IRGRP = 00040;
-    private static final int S_IWGRP = 00020;
-    private static final int S_IXGRP = 00010;
-    private static final int S_IROTH = 00004;
-    private static final int S_IWOTH = 00002;
-    private static final int S_IXOTH = 00001;
-    @NotNull
-    public static String formatMod(int mod) {
-        final StringBuilder sb = new StringBuilder(16);
-        sb.append('0');
-        sb.append(Integer.toOctalString(mod & 07777));
-        sb.append(':');
-        sb.append((S_ISDIR(mod)) ? "d" : "-");
-        sb.append((mod & S_IRUSR)!=0 ? "r" : "-");
-        sb.append((mod & S_IWUSR)!=0 ? "w" : "-");
-        sb.append((mod & S_IXUSR)!=0 ? "x" : "-");
-        sb.append((mod & S_IRGRP)!=0 ? "r" : "-");
-        sb.append((mod & S_IWGRP)!=0 ? "w" : "-");
-        sb.append((mod & S_IXGRP)!=0 ? "x" : "-");
-        sb.append((mod & S_IROTH)!=0 ? "r" : "-");
-        sb.append((mod & S_IWOTH)!=0 ? "w" : "-");
-        final boolean sticky = isSticky(mod);
-        final boolean xoth = (mod & S_IXOTH)!=0;
-        sb.append(sticky ? (xoth ? 't' : 'T') : (xoth ? "x" : "-"));
-        return sb.toString();
     }
 }
