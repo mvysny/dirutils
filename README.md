@@ -4,36 +4,18 @@ Tired of `File.mkdir()` and `File.mkdirs()` and `File.delete()` not throwing `IO
 but returning a non-informative `false` instead? Try this library. Also supports basic stuff
 like deleting a directory recursively, moving a file (even across different mount-points).
 
+For Java usage, see the `DirUtils` class.
+For Kotlin usage, see `DirUtilsKt` class which adds useful extension methods
+to built-in `File` class.
+
 ## Using with your project
 
-First, add this repo to your pom.xml:
-```xml
-<project ...>
-  ...
-  <repositories>
-    <repository>
-      <id>baka.sk</id>
-      <name>Baka</name>
-      <url>http://www.baka.sk/maven2</url>
-    </repository>
-  </repositories>
-</project>
-```
-
-Or this to your gradle file:
-```
-repositories {
-    maven {
-        url "http://www.baka.sk/maven2"
-    }
-}
-```
-
-You can then add Maven dependency for `sk.baka.android:dirutils:1.8` to your project.
+The library is present on Maven Central, simply add the library as
+a Maven dependency `com.github.mvysny.dirutils:dirutils:2.0` to your project.
 
 ## Building from scratch
 
-Head to dirutil's root and type
+Head to dirutils root and type
 ```sh
 $ ./gradlew
 ```
