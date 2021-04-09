@@ -298,8 +298,9 @@ public class DirUtils {
         FORCE_SPI = fileSystemSpi;
     }
 
+    // visible for testing
     @NotNull
-    private static FileSystemSpi get() {
+    static FileSystemSpi get() {
         if (SPI == null) {
             if (FORCE_SPI != null) {
                 SPI = FORCE_SPI;

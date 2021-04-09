@@ -4,9 +4,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.AtomicMoveNotSupportedException;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
+import java.nio.file.*;
 
 /**
  * Uses new file methods added in Java 7 and Android API level 26 (Android Oreo 8.0.0).
@@ -44,11 +42,23 @@ public class Java7FS implements FileSystemSpi {
 
     @Override
     public void delete(@NotNull File fileOrEmptyDirectory) throws IOException {
-        Files.delete(fileOrEmptyDirectory.toPath());
+        try {
+            Files.delete(fileOrEmptyDirectory.toPath());
+        } catch (DirectoryNotEmptyException ex) {
+            throw new IOException("Failed to delete '" + fileOrEmptyDirectory + "' because it's not empty", ex);
+        } catch (IOException ex) {
+            throw new IOException("Failed to delete '" + fileOrEmptyDirectory + "': " + ex.getMessage(), ex);
+        }
     }
 
     @Override
     public void mkdir(@NotNull File directory) throws IOException {
-        Files.createDirectory(directory.toPath());
+        try {
+            Files.createDirectory(directory.toPath());
+        } catch (FileAlreadyExistsException ex) {
+            throw new IOException("'" + directory + "' points to a file", ex);
+        } catch (IOException ex) {
+            throw new IOException("The directory '" + directory + "' couldn't be created: " + (directory.getParentFile().canWrite() ? directory.getParent() + " not writable" : "unknown"), ex);
+        }
     }
 }
