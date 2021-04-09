@@ -37,3 +37,7 @@ Head to dirutil's root and type
 ```sh
 $ ./gradlew
 ```
+
+# License
+
+See [LICENSE](LICENSE)
