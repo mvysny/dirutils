@@ -5,12 +5,11 @@ import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.AtomicMoveNotSupportedException;
-import java.nio.file.CopyOption;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 
 /**
- * Uses new file methods added in Java 7.
+ * Uses new file methods added in Java 7 and Android API level 26 (Android Oreo 8.0.0).
  * @author mvy
  */
 public class Java7FS implements FileSystemSpi {
