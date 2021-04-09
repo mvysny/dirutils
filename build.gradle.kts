@@ -32,10 +32,18 @@ repositories {
 dependencies {
     compileOnly("com.google.android:android:4.1.1.4")
     implementation("org.slf4j:slf4j-api:1.7.30")
-    testImplementation("org.slf4j:slf4j-simple:1.7.30")
     compileOnly(kotlin("stdlib"))
-    testImplementation(kotlin("test"))
     // don't add any further dependencies, to keep Android app's size at check.
+
+    testImplementation("org.slf4j:slf4j-simple:1.7.30")
+    testImplementation("com.github.mvysny.dynatest:dynatest-engine:0.19") {
+        // we need to use an older version of junit5 since 5.6.2 is not compatible with java 7
+        exclude(group = "org.junit.jupiter")
+        exclude(group = "org.junit.platform")
+    }
+    // we need to use an older version of junit5 since 5.6.2 is not compatible with java 7
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.5.2")
+    testImplementation("org.junit.platform:junit-platform-engine:1.5.2")
 }
 
 // following https://dev.to/kengotoda/deploying-to-ossrh-with-gradle-in-2020-1lhi
