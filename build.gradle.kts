@@ -11,7 +11,7 @@ plugins {
 defaultTasks("clean", "build")
 
 group = "com.github.mvysny.dirutils"
-version = "2.0"
+version = "2.1-SNAPSHOT"
 
 java {
     sourceCompatibility = JavaVersion.VERSION_1_7
