@@ -11,14 +11,6 @@ import java.io.IOException;
  */
 public interface FileSystemSpi {
     /**
-     * Returns the rwxrwxrwx mod for given file.
-     *
-     * @param file the file, absolute, not null.
-     * @return mod or null if the file system does not provide such information.
-     */
-    Integer getMod(@NotNull String file) throws IOException;
-
-    /**
      * Renames the file, overwriting the target file.
      * <p></p>
      * If the file cannot be renamed atomically (because target resides on a different mount point), return false.

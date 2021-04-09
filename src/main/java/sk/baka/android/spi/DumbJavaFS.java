@@ -11,11 +11,6 @@ import java.io.IOException;
  */
 public class DumbJavaFS implements FileSystemSpi {
     @Override
-    public Integer getMod(@NotNull String file) throws IOException {
-        return null;
-    }
-
-    @Override
     public boolean rename(@NotNull File source, @NotNull File target) throws IOException {
         return source.renameTo(target);
     }

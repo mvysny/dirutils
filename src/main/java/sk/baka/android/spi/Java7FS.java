@@ -26,11 +26,6 @@ public class Java7FS implements FileSystemSpi {
     }
 
     @Override
-    public Integer getMod(@NotNull String file) throws IOException {
-        return null;
-    }
-
-    @Override
     public boolean rename(@NotNull File source, @NotNull File target) throws IOException {
         try {
             Files.move(source.toPath(), target.toPath(), StandardCopyOption.ATOMIC_MOVE);

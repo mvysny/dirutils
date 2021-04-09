@@ -280,10 +280,6 @@ public class DirUtils {
 
     private static final Logger log = LoggerFactory.getLogger(DirUtils.class);
 
-    public static Integer getMod(@NotNull File file) throws IOException {
-        return getMod(file.getAbsolutePath());
-    }
-
     @Nullable
     private static FileSystemSpi SPI;
     @Nullable
@@ -313,9 +309,5 @@ public class DirUtils {
             log.info("DirUtils: using SPI " + SPI.getClass().getSimpleName());
         }
         return SPI;
-    }
-
-    public static Integer getMod(@NotNull String file) throws IOException {
-        return get().getMod(file);
     }
 }
