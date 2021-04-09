@@ -31,13 +31,9 @@ repositories {
 
 You can then add Maven dependency for `sk.baka.android:dirutils:1.8` to your project.
 
-Afterwards, download the native part of the library here: http://www.baka.sk/maven2/sk/baka/android/dirutils/ (search for
-`dirutils-*-native.zip`) and unpack it to your Android project. Done!
-
 ## Building from scratch
 
-You will need to install Android NDK and add the `ndk-build` script to your PATH. Then, head to dirutil's root and type
+Head to dirutil's root and type
 ```sh
 $ ./gradlew
 ```
-
