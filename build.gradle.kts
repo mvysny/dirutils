@@ -11,7 +11,7 @@ plugins {
 defaultTasks("clean", "build")
 
 group = "com.github.mvysny.dirutils"
-version = "2.0-SNAPSHOT"
+version = "2.0"
 
 java {
     sourceCompatibility = JavaVersion.VERSION_1_7
@@ -72,7 +72,7 @@ publishing {
             this.artifactId = "dirutils"
             version = project.version.toString()
             pom {
-                description.set("DirUtils: Android File and Directory utilities which do not suck ")
+                description.set("DirUtils: Android File and Directory utilities which do not suck")
                 name.set("DirUtils")
                 url.set("https://github.com/mvysny/dirutils")
                 licenses {
