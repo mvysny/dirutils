@@ -73,5 +73,55 @@ class DirUtilsKtTest : DynaTest({
                 }
             }
         }
+        group("rmrf") {
+            test("empty dir") {
+                val dir = File(tempdir, "foo")
+                dir.mkdirp()
+                dir.rmrf()
+                expect(false) { dir.exists() }
+            }
+            test("empty file") {
+                val file = File(tempdir, "foo")
+                file.writeText("foo")
+                file.rmrf()
+                expect(false) { file.exists() }
+            }
+            test("do nothing on non-existent file/dir") {
+                val file = File(tempdir, "foo")
+                file.rmrf()
+                expect(false) { file.exists() }
+            }
+            test("deletes non-empty dir as well") {
+                val dir = File(tempdir, "foo/bar")
+                dir.mkdirp()
+                dir.parentFile.rmrf()
+                expect(false) { dir.parentFile.exists() }
+            }
+        }
+        group("rmrfq") {
+            test("empty dir") {
+                val dir = File(tempdir, "foo")
+                dir.mkdirp()
+                dir.rmrfq()
+                expect(false) { dir.exists() }
+            }
+            test("empty file") {
+                val file = File(tempdir, "foo")
+                file.writeText("foo")
+                file.rmrfq()
+                expect(false) { file.exists() }
+            }
+            test("do nothing on non-existent file/dir") {
+                val file = File(tempdir, "foo")
+                file.rmrfq()
+                expect(false) { file.exists() }
+            }
+            test("deletes non-empty dir as well") {
+                val dir = File(tempdir, "foo/bar")
+                dir.mkdirp()
+                dir.parentFile.rmrfq()
+                expect(false) { dir.parentFile.exists() }
+            }
+        }
     }
 })
