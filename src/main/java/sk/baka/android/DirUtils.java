@@ -294,13 +294,31 @@ public class DirUtils {
         FORCE_SPI = fileSystemSpi;
     }
 
+    private static final boolean JAVA7_AVAIL;
+    static {
+        boolean avail = true;
+        try {
+            Class.forName("java.nio.file.Files");
+        } catch (ClassNotFoundException ex) {
+            avail = false;
+        }
+        JAVA7_AVAIL = avail;
+    }
+
+    public static boolean isJava7Avail() {
+        // had to move the function here. On Android 4.4 we cannot call Java7FS.isAvail()
+        // since that would throw VerifyError when Android tries to load the Java7FS class.
+        return JAVA7_AVAIL;
+    }
+
+
     // visible for testing
     @NotNull
     static FileSystemSpi get() {
         if (SPI == null) {
             if (FORCE_SPI != null) {
                 SPI = FORCE_SPI;
-            } else if (Java7FS.isAvail()) {
+            } else if (isJava7Avail()) {
                 SPI = new Java7FS();
             } else {
                 // fallback
