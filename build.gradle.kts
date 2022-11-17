@@ -3,7 +3,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     java
-    kotlin("jvm") version "1.4.32"
+    kotlin("jvm") version "1.7.21"
     `maven-publish`
     signing
 }
@@ -14,15 +14,12 @@ group = "com.github.mvysny.dirutils"
 version = "2.2-SNAPSHOT"
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_1_7
-    targetCompatibility = JavaVersion.VERSION_1_7
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
 }
 
 tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "1.6"  // retain compatibility with Android
-    if (System.getProperty("kotlin.jdkHome") != null) {
-        kotlinOptions.jdkHome = System.getProperty("kotlin.jdkHome")
-    }
+    kotlinOptions.jvmTarget = "1.8"  // retain compatibility with Android
 }
 
 repositories {
@@ -36,14 +33,7 @@ dependencies {
     // don't add any further dependencies, to keep Android app's size at check.
 
     testImplementation("org.slf4j:slf4j-simple:1.7.30")
-    testImplementation("com.github.mvysny.dynatest:dynatest-engine:0.19") {
-        // we need to use an older version of junit5 since 5.6.2 is not compatible with java 7
-        exclude(group = "org.junit.jupiter")
-        exclude(group = "org.junit.platform")
-    }
-    // we need to use an older version of junit5 since 5.6.2 is not compatible with java 7
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.5.2")
-    testImplementation("org.junit.platform:junit-platform-engine:1.5.2")
+    testImplementation("com.github.mvysny.dynatest:dynatest:0.24")
 }
 
 // following https://dev.to/kengotoda/deploying-to-ossrh-with-gradle-in-2020-1lhi
