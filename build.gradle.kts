@@ -28,11 +28,11 @@ repositories {
 
 dependencies {
     compileOnly("com.google.android:android:4.1.1.4")
-    implementation("org.slf4j:slf4j-api:1.7.30")
+    implementation("org.slf4j:slf4j-api:2.0.0")
     compileOnly(kotlin("stdlib"))
     // don't add any further dependencies, to keep Android app's size at check.
 
-    testImplementation("org.slf4j:slf4j-simple:1.7.30")
+    testImplementation("org.slf4j:slf4j-simple:2.0.0")
     testImplementation("com.github.mvysny.dynatest:dynatest:0.24")
 }
 
