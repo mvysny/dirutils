@@ -19,7 +19,7 @@ java {
 }
 
 tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "1.8"  // retain compatibility with Android
+    kotlinOptions.jvmTarget = "1.8"  // stay on 1.8 to retain compatibility with Android
 }
 
 repositories {
@@ -28,11 +28,11 @@ repositories {
 
 dependencies {
     compileOnly("com.google.android:android:4.1.1.4")
-    implementation("org.slf4j:slf4j-api:2.0.6")
+    implementation("org.slf4j:slf4j-api:2.0.7")
     compileOnly(kotlin("stdlib"))
     // don't add any further dependencies, to keep Android app's size at check.
 
-    testImplementation("org.slf4j:slf4j-simple:2.0.6")
+    testImplementation("org.slf4j:slf4j-simple:2.0.7")
     testImplementation("com.github.mvysny.dynatest:dynatest:0.24")
 }
 
