@@ -99,3 +99,8 @@ tasks.withType<Test> {
         exceptionFormat = TestExceptionFormat.FULL
     }
 }
+
+if (JavaVersion.current() > JavaVersion.VERSION_11 && gradle.startParameter.taskNames.contains("publish")) {
+    throw GradleException("Release this library with JDK 11 or lower, to ensure Android compatibility; current JDK is ${JavaVersion.current()}")
+}
+
