@@ -123,5 +123,33 @@ class DirUtilsKtTest : DynaTest({
                 expect(false) { dir.parentFile.exists() }
             }
         }
+        group("calculateLengthRecursively") {
+            test("non-existing") {
+                val dir = File(tempdir, "foo")
+                expect(false) { dir.exists() }
+                expect(0) { dir.calculateLengthRecursively() }
+            }
+            test("file") {
+                val file = File(tempdir, "foo")
+                file.writeText("foo")
+                expect(3) { file.calculateLengthRecursively() }
+            }
+            test("empty dir") {
+                val file = File(tempdir, "foo")
+                file.mkdirp()
+                expect(4096) { file.calculateLengthRecursively() }
+            }
+            test("nested empty dirs") {
+                val dir = File(tempdir, "foo/bar/baz")
+                dir.mkdirp()
+                expect(12288) { File(tempdir, "foo").calculateLengthRecursively() }
+            }
+            test("nested dirs with a file") {
+                val dir = File(tempdir, "foo/bar/baz")
+                dir.mkdirp()
+                File(dir, "foo.txt").writeText("foo!")
+                expect(12292) { File(tempdir, "foo").calculateLengthRecursively() }
+            }
+        }
     }
 })

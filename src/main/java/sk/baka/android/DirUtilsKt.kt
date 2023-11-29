@@ -38,3 +38,18 @@ fun File.rmrf() = DirUtils.deleteRecursively(this)
  * Deletes given file or dictionary. Does not throw [IOException]. The file must be [absolute][File.absolute].
  */
 fun File.rmrfq() = DirUtils.deleteRecursivelyQuietly(this)
+
+/**
+ * Returns length in bytes of given file or directory.
+ * @receiver dir the directory to list. A directory length is set to be 4kb + lengths of all its children.
+ * @return the directory length, 0 if the directory/file does not exist.
+ */
+fun File.calculateLengthRecursively(): Long = when {
+    !exists() -> 0
+    isFile -> length()
+    isDirectory -> {
+        val files = listFiles() ?: arrayOf()
+        4096 + files.sumOf { it.calculateLengthRecursively() }
+    }
+    else -> 0
+}
