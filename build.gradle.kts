@@ -3,7 +3,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     java
-    kotlin("jvm") version "1.9.22"
+    kotlin("jvm") version "1.9.23"
     `maven-publish`
     signing
 }
@@ -28,12 +28,12 @@ repositories {
 
 dependencies {
     compileOnly("com.google.android:android:4.1.1.4")
-    implementation("org.slf4j:slf4j-api:2.0.9")
+    implementation("org.slf4j:slf4j-api:2.0.12")
     compileOnly(kotlin("stdlib"))
     // don't add any further dependencies, to keep Android app's size at check.
 
-    testImplementation("org.slf4j:slf4j-simple:2.0.9")
-    testImplementation("com.github.mvysny.dynatest:dynatest:0.24")
+    testImplementation("org.slf4j:slf4j-simple:2.0.12")
+    testImplementation("com.github.mvysny.dynatest:dynatest:0.25")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
