@@ -40,12 +40,14 @@ fun File.rmrf() = DirUtils.deleteRecursively(this)
 fun File.rmrfq() = DirUtils.deleteRecursivelyQuietly(this)
 
 /**
- * Returns length in bytes of given file or directory.
+ * Returns length in bytes of given file or directory. A symlink counts 0 and is not followed.
  * @receiver dir the directory to list. A directory length is set to be 4kb + lengths of all its children.
  * @return the directory length, 0 if the directory/file does not exist.
+ * @throws IOException if a symlink can't be told apart from a file, see [sk.baka.android.spi.FileSystemSpi.isSymlink].
  */
+@Throws(IOException::class)
 fun File.calculateLengthRecursively(): Long = when {
-    !exists() -> 0
+    DirUtils.get().isSymlink(this) -> 0
     isFile -> length()
     isDirectory -> {
         val files = listFiles() ?: arrayOf()

@@ -39,4 +39,13 @@ public interface FileSystemSpi {
      * @throws IOException if the directory couldn't be created, e.g. because a file of that name exists.
      */
     void mkdir(@NotNull File directory) throws IOException;
+
+    /**
+     * Tells whether this is a symlink, dangling or not. Recursive operations delete a symlink rather than follow
+     * it, like {@code rm -rf} does.
+     *
+     * @param file may not exist.
+     * @throws IOException if the path can't be resolved.
+     */
+    boolean isSymlink(@NotNull File file) throws IOException;
 }

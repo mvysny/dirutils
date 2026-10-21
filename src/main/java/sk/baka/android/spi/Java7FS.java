@@ -46,6 +46,11 @@ public class Java7FS implements FileSystemSpi {
         }
     }
 
+    @Override
+    public boolean isSymlink(@NotNull File file) {
+        return Files.isSymbolicLink(file.toPath());
+    }
+
     /**
      * Prefers {@code guessed}, which names the culprit; NIO names only the paths it was given, and puts the reason
      * of the commonest failures solely into the exception's type.

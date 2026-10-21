@@ -5,6 +5,7 @@ import sk.baka.android.spi.FileSystemSpi
 import sk.baka.android.spi.Java7FS
 import java.io.*
 import java.nio.file.Files
+import java.nio.file.LinkOption
 import kotlin.test.expect
 
 /**
@@ -32,6 +33,21 @@ fun createTempDirOnOtherMount(of: File): File? {
     if (!shm.isDirectory || !shm.canWrite()) return null
     if (Files.getFileStore(shm.toPath()) == Files.getFileStore(of.toPath())) return null
     return Files.createTempDirectory(shm.toPath(), "dirutils").toFile()
+}
+
+/**
+ * Makes this a symlink pointing to [target], which may not exist.
+ */
+fun File.symlinkTo(target: File): File {
+    Files.createSymbolicLink(toPath(), target.toPath())
+    return this
+}
+
+/**
+ * Unlike [expectNotExists], also catches a dangling symlink, which [File.exists] denies.
+ */
+fun File.expectNoEntry() {
+    expect(false, "$this still exists") { Files.exists(toPath(), LinkOption.NOFOLLOW_LINKS) }
 }
 
 class TrackingInputStream(bytes: ByteArray) : ByteArrayInputStream(bytes) {
@@ -136,6 +152,19 @@ class DirUtilsTest : DynaTest({
                 expectThrows(IOException::class, "Failed to delete '$dir': '$dir' is not empty") { DirUtils.deleteNonRec(dir) }
                 dir.expectDirectory()
             }
+            test("deletes a dangling symlink") {
+                val link = File(tempdir, "foo").symlinkTo(File(tempdir, "nowhere"))
+                DirUtils.deleteNonRec(link)
+                link.expectNoEntry()
+            }
+            test("deletes a symlink to a dir, not the dir") {
+                val dir = File(tempdir, "foo")
+                File(dir, "bar").mkdirp()
+                val link = File(tempdir, "link").symlinkTo(dir)
+                DirUtils.deleteNonRec(link)
+                link.expectNoEntry()
+                File(dir, "bar").expectDirectory()
+            }
         }
 
         group("deleteRecursively") {
@@ -153,6 +182,41 @@ class DirUtilsTest : DynaTest({
                     expectThrows(IOException::class, "Failed to delete") { DirUtils.deleteRecursively(dir) }
                 }
                 dir.expectDirectory()
+            }
+            test("deletes a symlink inside, not what it points to") {
+                val victim = File(tempdir, "victim")
+                victim.mkdirp()
+                File(victim, "keep.txt").writeText("keep")
+                val dir = File(tempdir, "foo")
+                dir.mkdirp()
+                File(dir, "link").symlinkTo(victim)
+                DirUtils.deleteRecursively(dir)
+                dir.expectNotExists()
+                expect("keep") { File(victim, "keep.txt").readText() }
+            }
+            test("deletes a dangling symlink inside") {
+                val dir = File(tempdir, "foo")
+                dir.mkdirp()
+                File(dir, "dangling").symlinkTo(File(tempdir, "nowhere"))
+                DirUtils.deleteRecursively(dir)
+                dir.expectNotExists()
+            }
+            test("deletes a symlink it's given, not what it points to") {
+                val victim = File(tempdir, "victim")
+                victim.mkdirp()
+                File(victim, "keep.txt").writeText("keep")
+                val link = File(tempdir, "link").symlinkTo(victim)
+                DirUtils.deleteRecursively(link)
+                link.expectNoEntry()
+                expect("keep") { File(victim, "keep.txt").readText() }
+            }
+            test("deletes a dir reached through a symlinked parent") {
+                val real = File(tempdir, "real")
+                File(real, "foo/bar").mkdirp()
+                val link = File(tempdir, "link").symlinkTo(real)
+                DirUtils.deleteRecursively(File(link, "foo"))
+                File(real, "foo").expectNotExists()
+                real.expectDirectory()
             }
         }
 
@@ -335,6 +399,41 @@ class DirUtilsTest : DynaTest({
             }
             test("swallows the failure") {
                 DirUtils.closeQuietly { throw IOException("simulated") }
+            }
+        }
+
+        group("isSymlink") {
+            test("a file isn't") {
+                val file = File(tempdir, "foo")
+                file.writeText("foo")
+                expect(false) { DirUtils.get().isSymlink(file) }
+            }
+            test("a dir isn't") {
+                expect(false) { DirUtils.get().isSymlink(tempdir) }
+            }
+            test("a missing file isn't") {
+                expect(false) { DirUtils.get().isSymlink(File(tempdir, "foo")) }
+            }
+            test("the root isn't") {
+                expect(false) { DirUtils.get().isSymlink(File("/")) }
+            }
+            test("a symlink to a file is") {
+                val file = File(tempdir, "foo")
+                file.writeText("foo")
+                expect(true) { DirUtils.get().isSymlink(File(tempdir, "link").symlinkTo(file)) }
+            }
+            test("a symlink to a dir is") {
+                expect(true) { DirUtils.get().isSymlink(File(tempdir, "link").symlinkTo(tempdir)) }
+            }
+            test("a dangling symlink is") {
+                expect(true) { DirUtils.get().isSymlink(File(tempdir, "link").symlinkTo(File(tempdir, "nowhere"))) }
+            }
+            test("a file under a symlinked dir isn't") {
+                val real = File(tempdir, "real")
+                real.mkdirp()
+                File(real, "foo").writeText("foo")
+                val link = File(tempdir, "link").symlinkTo(real)
+                expect(false) { DirUtils.get().isSymlink(File(link, "foo")) }
             }
         }
 

@@ -105,6 +105,7 @@ public class DirUtils {
     }
     /**
      * Deletes given file or empty directory. Does nothing if there is no such file or directory with given name.
+     * A symlink is deleted itself, even a dangling one.
      * @param fileOrEmptyDirectory the file/directory to delete, not null. Must be an absolute path (must start with a slash).
      * @throws IOException if directory delete fails, for example because the directory is not empty.
      * @throws IllegalArgumentException if given path is not absolute.
@@ -113,7 +114,8 @@ public class DirUtils {
         if (!fileOrEmptyDirectory.isAbsolute()) {
             throw new IllegalArgumentException("Parameter fileOrEmptyDirectory: invalid value " + fileOrEmptyDirectory + ": must be an absolute path");
         }
-        if (!fileOrEmptyDirectory.exists()) {
+        // File.exists() follows the link, so it denies a dangling one
+        if (!fileOrEmptyDirectory.exists() && !get().isSymlink(fileOrEmptyDirectory)) {
             return;
         }
         get().delete(fileOrEmptyDirectory);
@@ -129,7 +131,7 @@ public class DirUtils {
         deleteRecursively(new File(path));
     }
     /**
-     * Deletes given directory, including subdirectories.
+     * Deletes given directory, including subdirectories. Like {@code rm -rf}, a symlink is deleted, never followed.
      * @param path the directory or file to delete, not null. Must be an absolute path (must start with a slash).
      * @throws IOException if the directory delete fails.
      * @throws IllegalArgumentException if given path is not absolute.
@@ -138,10 +140,7 @@ public class DirUtils {
         if (!path.isAbsolute()) {
             throw new IllegalArgumentException("Parameter path: invalid value " + path + ": must be an absolute path");
         }
-        if (!path.exists()) {
-            return;
-        }
-        if (path.isDirectory()) {
+        if (path.isDirectory() && !get().isSymlink(path)) {
             final File[] files = path.listFiles();
             if (files != null) {
                 for (final File child : files) {

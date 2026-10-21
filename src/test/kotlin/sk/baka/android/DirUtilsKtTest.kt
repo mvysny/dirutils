@@ -157,6 +157,23 @@ class DirUtilsKtTest : DynaTest({
                     expect(4096) { dir.calculateLengthRecursively() }
                 }
             }
+            test("doesn't follow a symlink") {
+                val victim = File(tempdir, "victim")
+                victim.mkdirp()
+                File(victim, "big.txt").writeText("x".repeat(10000))
+                val dir = File(tempdir, "foo")
+                dir.mkdirp()
+                File(dir, "foo.txt").writeText("foo")
+                File(dir, "link").symlinkTo(victim)
+                File(dir, "filelink").symlinkTo(File(victim, "big.txt"))
+                expect(4099) { dir.calculateLengthRecursively() }
+            }
+            test("survives a symlink loop") {
+                val dir = File(tempdir, "foo")
+                dir.mkdirp()
+                File(dir, "loop").symlinkTo(dir)
+                expect(4096) { dir.calculateLengthRecursively() }
+            }
             test("neither file nor dir") {
                 val devNull = File("/dev/null")
                 if (!devNull.exists()) return@test

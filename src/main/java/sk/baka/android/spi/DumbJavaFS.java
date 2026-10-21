@@ -5,6 +5,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 
 /**
  * Backend on plain {@link File}, which answers only {@code false}; the reasons are guessed by
@@ -38,6 +39,25 @@ public class DumbJavaFS implements FileSystemSpi {
         if (!directory.mkdir() && !directory.isDirectory()) {
             throw new IOException("The directory '" + directory + "' couldn't be created: " + orUnknown(FailureReason.ofMkdir(directory)));
         }
+    }
+
+    /**
+     * {@link File} follows symlinks everywhere, so a symlink is told by its canonical path differing from its path
+     * under the canonical parent; a dangling one, which {@link File#exists()} denies, by its parent still listing it.
+     */
+    @Override
+    public boolean isSymlink(@NotNull File file) throws IOException {
+        final File parent = file.getParentFile();
+        final String name = file.getName();
+        if (parent == null || name.equals(".") || name.equals("..")) {
+            return false;
+        }
+        if (!file.exists()) {
+            final String[] siblings = parent.list();
+            return siblings != null && Arrays.asList(siblings).contains(name);
+        }
+        final File inCanonicalParent = new File(parent.getCanonicalFile(), name);
+        return !inCanonicalParent.getCanonicalFile().equals(inCanonicalParent);
     }
 
     @NotNull
