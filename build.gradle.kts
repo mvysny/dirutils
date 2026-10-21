@@ -101,6 +101,11 @@ tasks.withType<Test> {
     }
 }
 
+val verifyDesignTripwires by tasks.registering(Exec::class) {
+    commandLine("design/verify_design_tripwires.sh")
+}
+tasks.check { dependsOn(verifyDesignTripwires) }
+
 if (JavaVersion.current() > JavaVersion.VERSION_11 && gradle.startParameter.taskNames.contains("publish")) {
     throw GradleException("Release this library with JDK 11 or lower, to ensure Android compatibility; current JDK is ${JavaVersion.current()}")
 }
