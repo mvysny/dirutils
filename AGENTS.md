@@ -46,6 +46,7 @@ Every fact lives in exactly one of these; the others link to it.
 
 - `./gradlew` — `clean build`: compile, tests, then `design/verify_design_tripwires.sh` via `check`; what CI runs on push on JDK 8, 11, 17 and 21 (`.github/workflows/gradle.yml`).
 - `./gradlew test --tests 'sk.baka.android.DirUtilsKtTest'` — one test class.
+- Every `test` run writes JaCoCo coverage to `build/reports/jacoco/test/` (`html/index.html`, `jacocoTestReport.xml`).
 - `mise.toml` pins the local build JDK to jetbrains-17; Gradle 8.x runs on JDK 8–24, not on a newer default.
 
 ## Maintenance of this file

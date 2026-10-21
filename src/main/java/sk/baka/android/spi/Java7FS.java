@@ -53,7 +53,7 @@ public class Java7FS implements FileSystemSpi {
         } catch (FileAlreadyExistsException ex) {
             throw new IOException("'" + directory + "' points to a file", ex);
         } catch (IOException ex) {
-            throw new IOException("The directory '" + directory + "' couldn't be created: " + (directory.getParentFile().canWrite() ? directory.getParent() + " not writable" : "unknown"), ex);
+            throw new IOException("The directory '" + directory + "' couldn't be created: " + (!directory.getParentFile().exists() ? directory.getParent() + " does not exist" : !directory.getParentFile().canWrite() ? directory.getParent() + " not writable" : "unknown"), ex);
         }
     }
 }

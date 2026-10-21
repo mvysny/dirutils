@@ -150,6 +150,18 @@ class DirUtilsKtTest : DynaTest({
                 File(dir, "foo.txt").writeText("foo!")
                 expect(12292) { File(tempdir, "foo").calculateLengthRecursively() }
             }
+            test("dir it can't list") {
+                val dir = File(tempdir, "foo")
+                File(dir, "bar").mkdirp()
+                dir.withoutPermission(read = true) {
+                    expect(4096) { dir.calculateLengthRecursively() }
+                }
+            }
+            test("neither file nor dir") {
+                val devNull = File("/dev/null")
+                if (!devNull.exists()) return@test
+                expect(0) { devNull.calculateLengthRecursively() }
+            }
         }
     }
 })

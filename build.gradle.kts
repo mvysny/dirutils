@@ -6,6 +6,7 @@ plugins {
     kotlin("jvm") version "2.0.20"
     `maven-publish`
     signing
+    jacoco
     id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
 }
 
@@ -100,6 +101,14 @@ tasks.withType<Test> {
     testLogging {
         // to see the exceptions of failed tests in the CI console.
         exceptionFormat = TestExceptionFormat.FULL
+    }
+    finalizedBy(tasks.jacocoTestReport)
+}
+
+tasks.jacocoTestReport {
+    reports {
+        xml.required = true
+        html.required = true
     }
 }
 
