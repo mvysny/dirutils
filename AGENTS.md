@@ -10,6 +10,7 @@ like deleting a directory recursively, moving a file (even across different moun
 
 - **Fail loudly, with a reason.** Every operation throws an `IOException` saying why it failed, never a bare `false`.
 - **Runs on any Android version.** Java 8 bytecode (desugared by AGP 3.0+), no Android API, and nothing loads a class the device lacks; reasoned, not device-tested; see `D_runtime_spi`.
+- **Migrates to `java.nio.file.Files` unchanged.** Each operation behaves like the `Files` call its javadoc names, on every input it accepts; see `D_files_parity`.
 - **Adds nothing to an app's size.** `slf4j-api` is the only runtime dependency; Kotlin stdlib and Android are `compileOnly`.
 
 ## Design docs

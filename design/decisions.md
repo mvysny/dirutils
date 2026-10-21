@@ -36,3 +36,15 @@ even the `*Quietly` variants throw it. They exist for best-effort cleanup, swall
 caller can't prevent (a busy file, a missing permission). Swallowed, the bug would become a log
 line while the cleanup silently never happens. The cost we carry: callers write
 `File(context.cacheDir, "x")`, never `File("x")`.
+
+## D_files_parity — Why mirror `java.nio.file.Files` rather than define our own semantics?
+
+Once an app's minimum SDK reaches 26, `Files` is there, and leaving DirUtils should be a
+find-and-replace. So each operation behaves like the `Files` call its javadoc names, on every
+input it accepts. Stricter is fine, looser is not: DirUtils may refuse more (relative paths,
+`D_absolute_paths`), but never does differently what both accept. Extras with no counterpart,
+like `deleteRecursively`, are fine. Two gaps stay. The exception is a plain `IOException`:
+`NoSuchFileException` and its siblings don't exist before API 26, and a caller catching
+`IOException` migrates unchanged. `mkdir` does nothing on an existing directory, where
+`createDirectory` throws: that is why anyone calls it, and 2.1 callers rely on it. Why not
+`Files`' names too: renaming breaks every caller for no change in behaviour.

@@ -32,6 +32,11 @@ import sk.baka.android.spi.Java7FS;
  * {@link IllegalArgumentException}, to catch resolving it against an unexpected working directory. The
  * {@code *Quietly} variants log the failure instead of throwing.
  *
+ * <p>Each operation behaves like the {@link java.nio.file.Files} call its doc names, so on Android 8.0
+ * (API 26)+ moving to {@code Files} changes nothing but the exception: DirUtils throws a plain
+ * {@link IOException}, never {@code Files}' subclasses such as {@code NoSuchFileException}, which older
+ * Android lacks.
+ *
  * <p>The work is done by a {@link FileSystemSpi} backend, picked at runtime; {@link #set} forces one.
  * @author mvy
  */
@@ -51,6 +56,8 @@ public class DirUtils {
     /**
      * Creates the directory; does nothing if it already is one. Does not create the parent, see
      * {@link #mkdirs(File)}.
+     *
+     * <p>Like {@link java.nio.file.Files#createDirectory}, except that one throws on an existing directory.
      * @param directory absolute.
      * @throws IOException if the directory couldn't be created, e.g. because a file of that name exists or the
      *   parent is missing.
@@ -77,7 +84,8 @@ public class DirUtils {
     }
 
     /**
-     * Creates the directory and any missing parents, like {@code mkdir -p}; does nothing if it already is one.
+     * Creates the directory and any missing parents, like {@code mkdir -p} and
+     * {@link java.nio.file.Files#createDirectories}; does nothing if it already is one.
      * @param directory absolute.
      * @throws IOException if a directory couldn't be created, e.g. because a file of that name exists; the parents
      *   created before it stay.
@@ -107,7 +115,7 @@ public class DirUtils {
     }
     /**
      * Deletes the file or empty directory; does nothing if it doesn't exist. A symlink, even a dangling one, is
-     * deleted itself, not its target.
+     * deleted itself, not its target. Like {@link java.nio.file.Files#deleteIfExists}.
      * @param fileOrEmptyDirectory absolute.
      * @throws IOException if the delete fails, e.g. because the directory is not empty.
      * @throws IllegalArgumentException if {@code fileOrEmptyDirectory} is relative.
