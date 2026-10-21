@@ -167,7 +167,8 @@ public class DirUtils {
      * Moves the file or directory, replacing {@code target}, like {@code mv} and
      * {@link java.nio.file.Files#move} with {@code REPLACE_EXISTING}. Within a mount point it is an atomic
      * rename. Across mount points it is copied with its modification time, then the source deleted: a symlink
-     * moves as itself (before Android 8.0, not at all), a directory only when empty.
+     * moves as itself (not before Android 8.0, nor onto external storage, which on Android 16 answers
+     * "permission denied"), a directory only when empty.
      *
      * <p>Not atomic: {@code target} is deleted first, so a move that fails afterwards leaves the source in place
      * and the target gone.

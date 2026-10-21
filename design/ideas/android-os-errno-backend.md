@@ -6,8 +6,9 @@
 
 On Android before API 26 there's no `java.nio.file`, so `DirUtils` falls back to
 `DumbJavaFS` (`D_runtime_spi`), which *guesses* why a `File` call returned `false` from what
-`File` can still see. Its `isSymlink` compares canonical paths, which Android 7.x may cache
-(`DumbJavaFS.isSymlink`); `Os.lstat` tells a symlink directly.
+`File` can still see. Its `isSymlink` compares canonical paths, which JDK 8–11 cache
+(`DumbJavaFS.isSymlink`); the API 21 and 24 emulators showed no such cache (2026-10-21), but
+`Os.lstat` tells a symlink directly.
 
 ## Proposal
 
