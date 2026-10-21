@@ -50,6 +50,15 @@ final class FailureReason {
     }
 
     /**
+     * Why {@code directory} can't move to another mount point: like {@link java.nio.file.Files#move}, only an
+     * empty one can.
+     */
+    @NotNull
+    static String ofMoveAcrossMounts(@NotNull File directory) {
+        return "'" + directory + "' is not empty, and a directory moves to another mount point only when empty";
+    }
+
+    /**
      * Why no entry can be created in, or removed from, {@code parent}.
      */
     @Nullable

@@ -415,31 +415,97 @@ class DirUtilsTest(private val fs: FS) {
         }
 
         @Test
-        fun `copies and deletes when the backend can't rename atomically`() {
-            val backend = DirUtils.get()
-            DirUtils.set(object : FileSystemSpi by backend {
-                override fun rename(source: File, target: File): Boolean = false
-            })
-            val source = File(tempdir, "foo")
-            source.writeText("foo")
-            val target = File(tempdir, "bar")
-            DirUtils.rename(source, target)
-            source.expectNotExists()
-            expect("foo") { target.readText() }
+        fun `does nothing when the target is the source through a symlinked parent`() {
+            val dir = File(tempdir, "dir")
+            dir.mkdirp()
+            val file = File(dir, "foo")
+            file.writeText("foo")
+            val link = File(tempdir, "link").symlinkTo(dir)
+            DirUtils.rename(file, File(link, "foo"))
+            expect("foo") { file.readText() }
         }
 
         @Test
-        fun `moves across mount points`() {
+        fun `moves a non-empty dir`() {
+            val source = File(tempdir, "foo")
+            File(source, "baz").mkdirp()
+            val target = File(tempdir, "bar")
+            DirUtils.rename(source, target)
+            source.expectNotExists()
+            File(target, "baz").expectDirectory()
+        }
+
+        @Test
+        fun `moves a dangling symlink`() {
+            val source = File(tempdir, "foo").symlinkTo(File(tempdir, "nowhere"))
+            val target = File(tempdir, "bar")
+            DirUtils.rename(source, target)
+            source.expectNoEntry()
+            expect(true) { Files.isSymbolicLink(target.toPath()) }
+        }
+
+        /**
+         * Runs [block] with a dir on another file store than [tempdir]; aborts the test when there is none.
+         */
+        private fun withOtherMount(block: (File) -> Unit) {
             val otherDir = createTempDirOnOtherMount(tempdir) ?: abort("no writable /dev/shm on another file store")
             try {
-                val source = File(tempdir, "foo")
-                source.writeText("foo")
-                val target = File(otherDir, "bar")
-                DirUtils.rename(source, target)
-                source.expectNotExists()
-                expect("foo") { target.readText() }
+                block(otherDir)
             } finally {
                 otherDir.deleteRecursively()
+            }
+        }
+
+        @Test
+        fun `moves a file across mount points, with its modification time`() = withOtherMount { otherDir ->
+            val source = File(tempdir, "foo")
+            source.writeText("foo")
+            source.setLastModified(1_000_000_000_000)
+            val target = File(otherDir, "bar")
+            DirUtils.rename(source, target)
+            source.expectNotExists()
+            expect("foo") { target.readText() }
+            expect(1_000_000_000_000) { target.lastModified() }
+        }
+
+        @Test
+        fun `moves an empty dir across mount points`() = withOtherMount { otherDir ->
+            val source = File(tempdir, "foo")
+            source.mkdirp()
+            val target = File(otherDir, "bar")
+            DirUtils.rename(source, target)
+            source.expectNotExists()
+            target.expectDirectory()
+        }
+
+        @Test
+        fun `fails on a non-empty dir across mount points, leaving it alone`() = withOtherMount { otherDir ->
+            val source = File(tempdir, "foo")
+            File(source, "baz").mkdirp()
+            val target = File(otherDir, "bar")
+            expectThrows(IOException::class, "'$source' is not empty, and a directory moves to another mount point only when empty") {
+                DirUtils.rename(source, target)
+            }
+            File(source, "baz").expectDirectory()
+            target.expectNotExists()
+        }
+
+        @Test
+        fun `moves a symlink across mount points as itself`() = withOtherMount { otherDir ->
+            val pointee = File(tempdir, "pointee")
+            pointee.writeText("foo")
+            val source = File(tempdir, "foo").symlinkTo(pointee)
+            val target = File(otherDir, "bar")
+            if (fs == FS.DumbJavaFS) {
+                expectThrows(IOException::class, "'$source' is a symlink, which File can't create on another mount point") {
+                    DirUtils.rename(source, target)
+                }
+                expect(true) { Files.isSymbolicLink(source.toPath()) }
+                target.expectNoEntry()
+            } else {
+                DirUtils.rename(source, target)
+                source.expectNoEntry()
+                expect(pointee.toPath()) { Files.readSymbolicLink(target.toPath()) }
             }
         }
     }
@@ -457,11 +523,93 @@ class DirUtilsTest(private val fs: FS) {
         }
 
         @Test
-        fun `fails when the source file doesn't exist`() {
+        fun `fails when the source file doesn't exist, leaving the target alone`() {
             val target = File(tempdir, "bar")
-            expectThrows(FileNotFoundException::class) {
+            target.writeText("bar")
+            expectThrows(FileNotFoundException::class, "foo' does not exist") {
                 DirUtils.copy(File(tempdir, "foo"), target)
             }
+            expect("bar") { target.readText() }
+        }
+
+        @Test
+        fun `overwrites the target file`() {
+            val source = File(tempdir, "foo")
+            source.writeText("foo")
+            val target = File(tempdir, "bar")
+            target.writeText("a longer bar")
+            DirUtils.copy(source, target)
+            expect("foo") { target.readText() }
+        }
+
+        @Test
+        fun `does nothing when copying onto itself`() {
+            val file = File(tempdir, "foo")
+            file.writeText("foo")
+            DirUtils.copy(file, File(file.absolutePath))
+            expect("foo") { file.readText() }
+        }
+
+        @Test
+        fun `does nothing when copying a symlink onto what it points to`() {
+            val file = File(tempdir, "foo")
+            file.writeText("foo")
+            val link = File(tempdir, "link").symlinkTo(file)
+            DirUtils.copy(link, file)
+            expect("foo") { file.readText() }
+        }
+
+        @Test
+        fun `replaces a target symlink rather than writing through it`() {
+            val source = File(tempdir, "foo")
+            source.writeText("foo")
+            val pointee = File(tempdir, "pointee")
+            pointee.writeText("pointee")
+            val target = File(tempdir, "bar").symlinkTo(pointee)
+            DirUtils.copy(source, target)
+            expect(false) { Files.isSymbolicLink(target.toPath()) }
+            expect("foo") { target.readText() }
+            expect("pointee") { pointee.readText() }
+        }
+
+        @Test
+        fun `replaces an empty target dir`() {
+            val source = File(tempdir, "foo")
+            source.writeText("foo")
+            val target = File(tempdir, "bar")
+            target.mkdirp()
+            DirUtils.copy(source, target)
+            expect("foo") { target.readText() }
+        }
+
+        @Test
+        fun `fails on a non-empty target dir`() {
+            val source = File(tempdir, "foo")
+            source.writeText("foo")
+            val target = File(tempdir, "bar")
+            File(target, "baz").mkdirp()
+            expectThrows(IOException::class, "Failed to delete") { DirUtils.copy(source, target) }
+            File(target, "baz").expectDirectory()
+        }
+
+        @Test
+        fun `copies a dir as an empty one`() {
+            val source = File(tempdir, "foo")
+            File(source, "baz").mkdirp()
+            val target = File(tempdir, "bar")
+            DirUtils.copy(source, target)
+            target.expectDirectory()
+            expect(listOf()) { target.list()!!.toList() }
+            File(source, "baz").expectDirectory()
+        }
+
+        @Test
+        fun `deletes a half-written target`() {
+            // opens fine, but reading offset 0 fails with EIO: a read failing once the target exists
+            val source = File("/proc/self/mem")
+            if (!source.exists()) abort<Nothing>("no /proc/self/mem")
+            val target = File(tempdir, "bar")
+            expectThrows(IOException::class) { DirUtils.copy(source, target) }
             target.expectNotExists()
         }
 

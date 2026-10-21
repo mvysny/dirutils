@@ -2,6 +2,7 @@ package sk.baka.android.spi;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import sk.baka.android.DirUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,16 +15,37 @@ import java.util.Arrays;
  */
 public class DumbJavaFS implements FileSystemSpi {
     @Override
-    public boolean rename(@NotNull File source, @NotNull File target) throws IOException {
+    public void rename(@NotNull File source, @NotNull File target) throws IOException {
         if (source.renameTo(target)) {
-            return true;
+            return;
         }
+        final String failed = "Failed to rename '" + source + "' to '" + target + "': ";
         final String why = FailureReason.ofRename(source, target);
         if (why != null) {
-            throw new IOException("Failed to rename '" + source + "' to '" + target + "': " + why);
+            throw new IOException(failed + why);
         }
-        // nothing File can see explains it, so assume a different mount point
-        return false;
+        // nothing File can see explains it, so assume another mount point, and copy as Files.move() does
+        if (isSymlink(source)) {
+            throw new IOException(failed + "'" + source + "' is a symlink, which File can't create on another mount point");
+        }
+        if (source.isDirectory()) {
+            final String[] children = source.list();
+            if (children == null) {
+                throw new IOException(failed + "'" + source + "' can't be listed");
+            }
+            if (children.length > 0) {
+                throw new IOException(failed + FailureReason.ofMoveAcrossMounts(source));
+            }
+        }
+        DirUtils.copy(source, target);
+        target.setLastModified(source.lastModified());
+        try {
+            delete(source);
+        } catch (IOException ex) {
+            // undo the copy, as Files.move() does, rather than leave the file in both places
+            target.delete();
+            throw ex;
+        }
     }
 
     @Override

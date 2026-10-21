@@ -17,8 +17,6 @@ Latest stable as of 2026-10-21 (`maven-versions.rb latest`):
 
 ## Minor code issues
 
-- `rename` across mount points copies with `copy(File, File)`, which fails on a directory
-  (`FileInputStream` on a dir). Now documented on `rename`; fix it, or leave it documented.
 - `copy(InputStream, …)` only logs a failed `flush()`, so a write lost in a buffer goes
   unreported. That breaks the "nothing but `*Quietly` swallows an `IOException`" convention.
 - `Q_canon_cache`: `DumbJavaFS.isSymlink` uses canonical paths; on JDK 8–11 the JVM caches them
@@ -32,8 +30,14 @@ Latest stable as of 2026-10-21 (`maven-versions.rb latest`):
 Things a 2.1 user notices:
 - Recursive delete no longer follows symlinks (it used to delete the target's contents), and
   a dangling symlink is now deleted instead of being skipped.
-- `FileSystemSpi` gained `isSymlink(File)`: a custom backend passed to `DirUtils.set()` must
-  implement it.
+- `FileSystemSpi` gained `isSymlink(File)`, and its `rename` now does the whole move, across
+  mount points too, returning nothing: a custom backend passed to `DirUtils.set()` must follow.
+- `rename` and `copy(File, File)` now behave like `Files.move` / `Files.copy`:
+  - Across mount points, `rename` moves an empty directory, the modification time, and (on
+    Android 8.0+) a symlink as itself. A non-empty directory still fails, now with a clear reason.
+  - `copy` copies a directory as an empty one and replaces a target symlink instead of writing
+    through it. It no longer leaves a half-written target behind.
+  - Neither destroys the file any more when the target is a second path to the source.
 - slf4j 1.7 → 2.0: an app with a 1.7-style binding gets a no-op logger for this library;
   `org.slf4j:slf4j-android` has no 2.x, [slf4j-handroid](https://github.com/mvysny/slf4j-handroid) does.
 - Java 7 → 8 bytecode: still any Android version, but the app's build needs AGP 3.0+.

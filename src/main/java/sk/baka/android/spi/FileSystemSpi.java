@@ -15,14 +15,15 @@ import java.io.IOException;
  */
 public interface FileSystemSpi {
     /**
-     * Renames the file, atomically.
+     * Moves the file, like {@link java.nio.file.Files#move} without options: an atomic rename within a mount
+     * point; across mount points a copy with the modification time, then the source deleted. Across mount
+     * points, a directory moves only when empty.
      *
-     * @param source exists.
+     * @param source exists, or is a dangling symlink.
      * @param target does not exist.
-     * @return false ONLY IF target resides on a different mount point, so the caller has to copy.
-     * @throws IOException on any other failure.
+     * @throws IOException if the move fails; the source stays, and a half-copied target is deleted.
      */
-    boolean rename(@NotNull File source, @NotNull File target) throws IOException;
+    void rename(@NotNull File source, @NotNull File target) throws IOException;
 
     /**
      * Deletes given file or empty directory.

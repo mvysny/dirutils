@@ -3,6 +3,7 @@ package sk.baka.android;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -163,55 +164,92 @@ public class DirUtils {
     }
 
     /**
-     * Moves the file, replacing {@code target}, like {@code mv}. Across mount points, where no atomic rename
-     * exists, the file is copied, then the source deleted; a directory can't move that way, see
-     * {@link #copy(File, File)}.
+     * Moves the file or directory, replacing {@code target}, like {@code mv} and
+     * {@link java.nio.file.Files#move} with {@code REPLACE_EXISTING}. Within a mount point it is an atomic
+     * rename. Across mount points it is copied with its modification time, then the source deleted: a symlink
+     * moves as itself (before Android 8.0, not at all), a directory only when empty.
      *
      * <p>Not atomic: {@code target} is deleted first, so a move that fails afterwards leaves the source in place
      * and the target gone.
-     * @param source must exist.
+     * @param source must exist; may be a dangling symlink.
      * @param target absolute; may be an empty directory, never a non-empty one.
      * @throws IOException if the source is missing, or the target can't be deleted, or the move fails.
      * @throws IllegalArgumentException if {@code target} is relative.
      */
     public static void rename(@NotNull File source, @NotNull File target) throws IOException {
-        if (source.equals(target)) {
+        // compared as entries, not by path: a second path to the source would be deleted below as the target
+        if (entry(source).equals(entry(target))) {
             return;
         }
         // the target is deleted first, so check before destroying it for nothing
-        if (!source.exists()) {
+        if (!source.exists() && !get().isSymlink(source)) {
             throw new IOException("Failed to rename '" + source + "' to '" + target + "': '" + source + "' does not exist");
         }
         deleteNonRec(target);
-        if (!get().rename(source, target)) {
-            copy(source, target);
-            deleteNonRec(source.getAbsolutePath());
-        }
+        get().rename(source, target);
     }
 
     /**
-     * Copies the file's bytes into {@code target}. Copies no attributes, such as permissions or the modification
+     * Copies the file's bytes into {@code target}, like {@link java.nio.file.Files#copy(java.nio.file.Path,
+     * java.nio.file.Path, java.nio.file.CopyOption...)} with {@code REPLACE_EXISTING}: a symlink is followed, a
+     * directory is copied as an empty one, and no attributes are copied, such as permissions or the modification
      * time.
-     * @param source a file, never a directory.
-     * @param target created, or overwritten.
-     * @throws IOException if the source can't be read or the target written; a missing source leaves no target
-     *   behind.
+     * @param source must exist.
+     * @param target replaced if it exists: a file, a symlink (not what it points to) or an empty directory,
+     *   never a non-empty one.
+     * @throws IOException if the source is missing, or the target can't be replaced or written; a half-written
+     *   target is deleted.
      */
     public static void copy(@NotNull File source, @NotNull File target) throws IOException {
-        // opened first, so that a missing source doesn't leave an empty target behind
+        // checked before the target is replaced, so that a missing source doesn't destroy it for nothing
+        if (!source.exists()) {
+            throw new FileNotFoundException("Failed to copy '" + source + "' to '" + target + "': '" + source + "' does not exist");
+        }
+        // the source is followed, the target isn't: copying a symlink onto what it points to is a no-op too
+        if (source.getCanonicalFile().equals(entry(target))) {
+            return;
+        }
+        final File absoluteTarget = target.getAbsoluteFile();
+        if (absoluteTarget.exists() || get().isSymlink(absoluteTarget)) {
+            get().delete(absoluteTarget);
+        }
+        if (source.isDirectory()) {
+            get().mkdir(absoluteTarget);
+            return;
+        }
         final FileInputStream in = new FileInputStream(source);
         final FileOutputStream out;
         try {
-            out = new FileOutputStream(target);
+            out = new FileOutputStream(absoluteTarget);
         } catch (IOException ex) {
             closeQuietly(in);
             throw ex;
         }
+        boolean copied = false;
         try {
             copy(in, out);
+            copied = true;
         } finally {
             closeQuietly(out);
+            if (!copied) {
+                absoluteTarget.delete();
+            }
         }
+    }
+
+    /**
+     * The directory entry {@code file} names: its parent's symlinks resolved, its own not. Two paths to one
+     * entry compare equal, a symlink and what it points to don't.
+     */
+    @NotNull
+    private static File entry(@NotNull File file) throws IOException {
+        final File absolute = file.getAbsoluteFile();
+        final File parent = absolute.getParentFile();
+        final String name = absolute.getName();
+        if (parent == null || name.equals(".") || name.equals("..")) {
+            return absolute.getCanonicalFile();
+        }
+        return new File(parent.getCanonicalFile(), name);
     }
 
     /**

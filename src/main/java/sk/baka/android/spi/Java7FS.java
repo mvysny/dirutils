@@ -15,12 +15,12 @@ import java.nio.file.*;
  */
 public class Java7FS implements FileSystemSpi {
     @Override
-    public boolean rename(@NotNull File source, @NotNull File target) throws IOException {
+    public void rename(@NotNull File source, @NotNull File target) throws IOException {
         try {
-            Files.move(source.toPath(), target.toPath(), StandardCopyOption.ATOMIC_MOVE);
-            return true;
-        } catch (AtomicMoveNotSupportedException ex) {
-            return false;
+            Files.move(source.toPath(), target.toPath());
+        } catch (DirectoryNotEmptyException ex) {
+            // the target doesn't exist, so the non-empty directory is the source, refused across mount points
+            throw new IOException("Failed to rename '" + source + "' to '" + target + "': " + FailureReason.ofMoveAcrossMounts(source), ex);
         } catch (IOException ex) {
             throw new IOException("Failed to rename '" + source + "' to '" + target + "': " + reason(FailureReason.ofRename(source, target), ex), ex);
         }
