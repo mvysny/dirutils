@@ -30,11 +30,11 @@ repositories {
 
 dependencies {
     compileOnly("com.google.android:android:4.1.1.4")
-    implementation("org.slf4j:slf4j-api:2.0.13")
+    implementation("org.slf4j:slf4j-api:2.0.20")
     compileOnly(kotlin("stdlib"))
     // don't add any further dependencies, to keep Android app's size at check.
 
-    testImplementation("org.slf4j:slf4j-simple:2.0.13")
+    testImplementation("org.slf4j:slf4j-simple:2.0.20")
     testImplementation("com.github.mvysny.dynatest:dynatest:0.25")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }

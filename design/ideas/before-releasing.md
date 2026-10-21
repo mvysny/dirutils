@@ -9,21 +9,13 @@ Latest stable as of 2026-10-21 (`maven-versions.rb latest`):
 | What | Now | Latest |
 |---|---|---|
 | Kotlin plugin `org.jetbrains.kotlin.jvm` | 2.0.20 | 2.4.21 |
-| `org.slf4j:slf4j-api` / `slf4j-simple` | 2.0.13 | 2.0.20 |
+| `org.slf4j:slf4j-api` / `slf4j-simple` | 2.0.20 (bumped) | 2.0.20 |
 | Gradle wrapper | 8.14.6 | 9.8.2 |
 | `io.github.gradle-nexus.publish-plugin` | 2.0.0 | 2.0.0 (current) |
 | `com.github.mvysny.dynatest:dynatest` | 0.25 | 0.25 (current) |
 
-- `Q_gradle9`: Gradle 9 itself needs JDK 17+ to run, but CI builds on JDK 8 and 11, and
-  `RELEASING.md` publishes from JDK 11 so the bytecode stays Android-safe. Either stay on 8.x,
-  or move to Gradle 9 + a JDK 8 toolchain (`java.toolchain`, `--release 8`), which would
-  also make the "release with JDK ≤ 11" guard in `build.gradle.kts` unnecessary.
-- `kotlinOptions.jvmTarget` is deprecated in Kotlin 2.x (an error in later versions):
-  move to `compilerOptions { jvmTarget = JvmTarget.JVM_1_8 }` when bumping Kotlin.
-- `Q_kotlin_metadata`: the jar's Kotlin metadata is now 2.0 (2.1 shipped 1.4), so a Kotlin
-  consumer needs a 1.9+ compiler to call the `File` extensions. Pin `languageVersion` /
-  `apiVersion` lower so older Android projects keep working? Bumping Kotlin without pinning
-  raises that floor further.
+- Gradle 9 vs 8, the Kotlin bump and its metadata floor: see `min-jvm-and-android-sdk.md`
+  (`Q_gradle8_eol`, `Q_kotlin_metadata`). Kotlin 2.4.21 builds green on Gradle 8.14.6 / JDK 8.
 
 ## Javadoc
 
@@ -55,6 +47,7 @@ Things a 2.1 user notices:
   a dangling symlink is now deleted instead of being skipped.
 - `FileSystemSpi` gained `isSymlink(File)`: a custom backend passed to `DirUtils.set()` must
   implement it.
-- slf4j 1.7 → 2.0: an app with a 1.7-style binding gets a no-op logger for this library.
-- Java 7 → 8 bytecode; Kotlin metadata 1.4 → 2.0 (see `Q_kotlin_metadata`).
+- slf4j 1.7 → 2.0: an app with a 1.7-style binding gets a no-op logger for this library;
+  `org.slf4j:slf4j-android` has no 2.x, [slf4j-handroid](https://github.com/mvysny/slf4j-handroid) does.
+- Java 7 → 8 bytecode; Kotlin metadata 1.4 → 2.0 or later (see `min-jvm-and-android-sdk.md`).
 - Every failure now names its culprit and reason, on both backends.
