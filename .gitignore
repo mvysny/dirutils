@@ -6,3 +6,7 @@ obj
 build
 .gradle
 
+.classpath
+.project
+.settings
+bin
