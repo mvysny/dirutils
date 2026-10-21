@@ -17,9 +17,6 @@ Latest stable as of 2026-10-21 (`maven-versions.rb latest`):
 
 ## Minor code issues
 
-- `DirUtils.get()` isn't synchronized, while `set()` is; `SPI` is not volatile. `get()` reads
-  `SPI` twice, so a `set()` racing it can make `get()` return `null`. Make `get()` synchronized,
-  or read `SPI` once into a local.
 - `rename` across mount points copies with `copy(File, File)`, which fails on a directory
   (`FileInputStream` on a dir). Now documented on `rename`; fix it, or leave it documented.
 - `copy(InputStream, …)` only logs a failed `flush()`, so a write lost in a buffer goes

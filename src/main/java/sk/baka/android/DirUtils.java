@@ -320,6 +320,8 @@ public class DirUtils {
     /**
      * Forces a backend, e.g. {@code DirUtils.set(new DumbJavaFS())}, instead of the detected one:
      * {@link Java7FS} if {@link #isJava7Avail()}, else {@link DumbJavaFS}.
+     * Call it before other threads use {@code DirUtils}, e.g. at startup or in a test: an
+     * operation racing it may keep using, or even re-install, the previous backend.
      * @param fileSystemSpi the backend, or {@code null} to detect one again.
      */
     public static synchronized void set(@Nullable FileSystemSpi fileSystemSpi) {
@@ -351,17 +353,23 @@ public class DirUtils {
     // visible for testing
     @NotNull
     static FileSystemSpi get() {
-        if (SPI == null) {
-            if (FORCE_SPI != null) {
-                SPI = FORCE_SPI;
+        // lock-free: SPI is read once into a local, since a racing set(), or a racy re-read of a
+        // non-volatile field, may otherwise make the second read return null. Threads racing the
+        // first call may each create a backend; harmless, the backends are stateless.
+        FileSystemSpi spi = SPI;
+        if (spi == null) {
+            final FileSystemSpi forced = FORCE_SPI;
+            if (forced != null) {
+                spi = forced;
             } else if (isJava7Avail()) {
-                SPI = new Java7FS();
+                spi = new Java7FS();
             } else {
                 // fallback
-                SPI = new DumbJavaFS();
+                spi = new DumbJavaFS();
             }
-            log.info("DirUtils: using SPI " + SPI.getClass().getSimpleName());
+            SPI = spi;
+            log.info("DirUtils: using SPI " + spi.getClass().getSimpleName());
         }
-        return SPI;
+        return spi;
     }
 }
