@@ -16,7 +16,8 @@ like deleting a directory recursively, moving a file (even across different moun
 
 | File | Owns | Loaded |
 |---|---|---|
-| `README.md` | the pitch, usage, the release procedure | — |
+| `README.md` | the pitch, usage | — |
+| `RELEASING.md` | the release procedure | — |
 | `AGENTS.md` (this) | promises, invariants, the module map, conventions, commands | every turn |
 | `design/decisions.md` | why this and not that — `D_` entries, FAQ-shaped | lazy |
 | doc comments | what one symbol does and why it is shaped so | at the symbol |
