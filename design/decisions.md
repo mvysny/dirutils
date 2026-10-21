@@ -25,3 +25,14 @@ not in `Java7FS`: on Android 4.4 merely loading a class that references `java.ni
 `VerifyError`. Why not NIO only: it drops every pre-Oreo device. Why not `File` only: its bare
 `false` is what the library exists to replace. The cost we carry: two implementations of every
 operation, so every test runs under both.
+
+## D_absolute_paths — Why throw on a relative path, even from `*Quietly`, rather than resolve it?
+
+Nobody chooses the working directory a relative path would resolve against: on a JVM it is
+wherever the app was launched from, on Android usually `/`. So `File("cache")` points somewhere
+the caller did not mean, and for `deleteRecursively` that wipes the wrong tree. A relative path
+is a programming error, not an I/O failure: it fails on the first run, every run. That is why
+even the `*Quietly` variants throw it. They exist for best-effort cleanup, swallowing what the
+caller can't prevent (a busy file, a missing permission). Swallowed, the bug would become a log
+line while the cleanup silently never happens. The cost we carry: callers write
+`File(context.cacheDir, "x")`, never `File("x")`.

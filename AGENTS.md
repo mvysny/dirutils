@@ -39,7 +39,7 @@ Every fact lives in exactly one of these; the others link to it.
 
 - **Java for the library, Kotlin for the `File` extensions and the tests**; both compile to 1.8 bytecode.
 - **Tests: JUnit 5, every suite a `@ParameterizedClass` over the `FS` enum** so it runs once per backend.
-- **Paths must be absolute**; a relative one throws `IllegalArgumentException`, to catch relative-path mistakes.
+- **Paths must be absolute**; a relative one throws `IllegalArgumentException`, even from `*Quietly`; see `D_absolute_paths`.
 - **`*Quietly` variants log the failure through slf4j** instead of throwing; nothing else swallows an `IOException`.
 
 ## Commands
