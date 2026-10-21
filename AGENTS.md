@@ -19,6 +19,7 @@ like deleting a directory recursively, moving a file (even across different moun
 |---|---|---|
 | `README.md` | the pitch, usage | — |
 | `RELEASING.md` | the release procedure | — |
+| `CHANGELOG.md` | what a user of the previous release notices, per release | — |
 | `AGENTS.md` (this) | promises, invariants, the module map, conventions, commands | every turn |
 | `design/decisions.md` | why this and not that — `D_` entries, FAQ-shaped | lazy |
 | doc comments | what one symbol does and why it is shaped so | at the symbol |
@@ -42,6 +43,7 @@ Every fact lives in exactly one of these; the others link to it.
 - **Tests: JUnit 5, every suite a `@ParameterizedClass` over the `FS` enum** so it runs once per backend.
 - **Paths must be absolute**; a relative one throws `IllegalArgumentException`, even from `*Quietly`; see `D_absolute_paths`.
 - **`*Quietly` variants log the failure through slf4j** instead of throwing; nothing else swallows an `IOException`.
+- **A change a library user notices gets its `CHANGELOG.md` line in the same commit**, under the unreleased version.
 
 ## Commands
 

@@ -12,6 +12,7 @@ to built-in `File` class.
 
 The library is present on Maven Central, simply add the library as
 a Maven dependency `com.github.mvysny.dirutils:dirutils:2.1` to your project.
+What changed between releases is in [CHANGELOG.md](CHANGELOG.md).
 
 It runs on JDK 8+ and on any Android version: the jar is Java 8 bytecode, which the Android
 Gradle Plugin 3.0+ desugars for old devices. Calling the Kotlin extensions needs a Kotlin
