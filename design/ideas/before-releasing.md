@@ -12,7 +12,7 @@ Latest stable as of 2026-10-21 (`maven-versions.rb latest`):
 | `org.slf4j:slf4j-api` / `slf4j-simple` | 2.0.20 (bumped) | 2.0.20 |
 | Gradle wrapper | 8.14.6 | 9.8.2 (staying on 8; why in `build.gradle.kts`) |
 | `io.github.gradle-nexus.publish-plugin` | 2.0.0 | 2.0.0 (current) |
-| `com.github.mvysny.dynatest:dynatest` | 0.25 | 0.25 (current) |
+| `org.junit:junit-bom` (replaced DynaTest) | 5.14.4 | 6.1.3 (staying on 5; why in `build.gradle.kts`) |
 
 
 ## Javadoc

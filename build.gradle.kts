@@ -39,7 +39,10 @@ dependencies {
     // don't add any further dependencies, to keep Android app's size at check.
 
     testImplementation("org.slf4j:slf4j-simple:2.0.20")
-    testImplementation("com.github.mvysny.dynatest:dynatest:0.25")
+    // JUnit 5, not 6: JUnit 6 needs JDK 17, and CI runs the tests on JDK 8 and 11 too.
+    testImplementation(platform("org.junit:junit-bom:5.14.4"))
+    testImplementation("org.junit.jupiter:junit-jupiter")
+    testImplementation(kotlin("test"))
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 

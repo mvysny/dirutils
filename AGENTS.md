@@ -38,7 +38,7 @@ Every fact lives in exactly one of these; the others link to it.
 ## Conventions
 
 - **Java for the library, Kotlin for the `File` extensions and the tests**; both compile to 1.8 bytecode.
-- **Tests: DynaTest, every suite wrapped in `withAllFS`** so it runs once per backend.
+- **Tests: JUnit 5, every suite a `@ParameterizedClass` over the `FS` enum** so it runs once per backend.
 - **Paths must be absolute**; a relative one throws `IllegalArgumentException`, to catch relative-path mistakes.
 - **`*Quietly` variants log the failure through slf4j** instead of throwing; nothing else swallows an `IOException`.
 
