@@ -52,10 +52,6 @@ java {
     withSourcesJar()
 }
 
-tasks.withType<Javadoc> {
-    isFailOnError = false
-}
-
 publishing {
     publications {
         create("mavenJava", MavenPublication::class.java).apply {
