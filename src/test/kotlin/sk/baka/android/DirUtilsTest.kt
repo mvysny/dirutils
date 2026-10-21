@@ -82,13 +82,28 @@ class DirUtilsTest : DynaTest({
             }
             test("does not create parents") {
                 val dir = File(tempdir, "foo/bar")
-                expectThrows(IOException::class, "foo does not exist") { DirUtils.mkdir(dir) }
+                expectThrows(IOException::class, "foo' does not exist") { DirUtils.mkdir(dir) }
                 dir.parentFile.expectNotExists()
+            }
+            test("fails when the parent is a file") {
+                File(tempdir, "foo").writeText("")
+                expectThrows(IOException::class, "foo' is not a directory") { DirUtils.mkdir(File(tempdir, "foo/bar")) }
             }
             test("fails in a read-only directory") {
                 tempdir.withoutPermission(write = true) {
-                    expectThrows(IOException::class, "$tempdir not writable") { DirUtils.mkdir(File(tempdir, "foo")) }
+                    expectThrows(IOException::class, "$tempdir' is not writable") { DirUtils.mkdir(File(tempdir, "foo")) }
                 }
+            }
+            test("the backend accepts a directory that appeared meanwhile") {
+                val dir = File(tempdir, "foo")
+                dir.mkdir()
+                DirUtils.get().mkdir(dir)
+                dir.expectDirectory()
+            }
+            test("the backend still fails on a file") {
+                val file = File(tempdir, "foo")
+                file.writeText("")
+                expectThrows(IOException::class, "foo' points to a file") { DirUtils.get().mkdir(file) }
             }
         }
 
@@ -111,9 +126,15 @@ class DirUtilsTest : DynaTest({
                 val file = File(tempdir, "foo")
                 file.writeText("foo")
                 tempdir.withoutPermission(write = true) {
-                    expectThrows(IOException::class, "Failed to delete") { DirUtils.deleteNonRec(file) }
+                    expectThrows(IOException::class, "Failed to delete '$file': '$tempdir' is not writable") { DirUtils.deleteNonRec(file) }
                 }
                 file.expectFile()
+            }
+            test("fails on a non-empty dir") {
+                val dir = File(tempdir, "foo")
+                File(dir, "bar").mkdirp()
+                expectThrows(IOException::class, "Failed to delete '$dir': '$dir' is not empty") { DirUtils.deleteNonRec(dir) }
+                dir.expectDirectory()
             }
         }
 
@@ -196,6 +217,32 @@ class DirUtilsTest : DynaTest({
                 expectThrows(IOException::class, "Failed to delete") { DirUtils.rename(source, target) }
                 source.expectFile()
             }
+            test("fails when the source doesn't exist, leaving the target alone") {
+                val source = File(tempdir, "foo")
+                val target = File(tempdir, "bar")
+                target.writeText("bar")
+                expectThrows(IOException::class, "foo' does not exist") { DirUtils.rename(source, target) }
+                expect("bar") { target.readText() }
+            }
+            test("fails into a read-only directory") {
+                val source = File(tempdir, "foo")
+                source.writeText("foo")
+                val targetDir = File(tempdir, "bar")
+                targetDir.mkdirp()
+                val target = File(targetDir, "baz")
+                targetDir.withoutPermission(write = true) {
+                    expectThrows(IOException::class, "Failed to rename '$source' to '$target': '$targetDir' is not writable") {
+                        DirUtils.rename(source, target)
+                    }
+                }
+                source.expectFile()
+                target.expectNotExists()
+            }
+            test("the backend fails on a missing source rather than asking for a copy") {
+                expectThrows(IOException::class, "foo' does not exist") {
+                    DirUtils.get().rename(File(tempdir, "foo"), File(tempdir, "bar"))
+                }
+            }
             test("copies and deletes when the backend can't rename atomically") {
                 val backend = DirUtils.get()
                 DirUtils.set(object : FileSystemSpi by backend {
@@ -233,9 +280,11 @@ class DirUtilsTest : DynaTest({
                 expect("foo") { target.readText() }
             }
             test("fails when the source file doesn't exist") {
+                val target = File(tempdir, "bar")
                 expectThrows(FileNotFoundException::class) {
-                    DirUtils.copy(File(tempdir, "foo"), File(tempdir, "bar"))
+                    DirUtils.copy(File(tempdir, "foo"), target)
                 }
+                target.expectNotExists()
             }
             test("closes the input stream only") {
                 val bytes = ByteArray(20000) { it.toByte() }
@@ -294,7 +343,6 @@ class DirUtilsTest : DynaTest({
                 DirUtils.set(null)
                 expect(true) { DirUtils.get() is Java7FS }
                 expect(true) { DirUtils.isJava7Avail() }
-                expect(true) { Java7FS.isAvail() }
             }
         }
     }

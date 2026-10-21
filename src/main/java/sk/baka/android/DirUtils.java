@@ -164,6 +164,10 @@ public class DirUtils {
         if (source.equals(target)) {
             return;
         }
+        // the target is deleted first, so check before destroying it for nothing
+        if (!source.exists()) {
+            throw new IOException("Failed to rename '" + source + "' to '" + target + "': '" + source + "' does not exist");
+        }
         deleteNonRec(target);
         if (!get().rename(source, target)) {
             copy(source, target);
@@ -172,9 +176,17 @@ public class DirUtils {
     }
 
     public static void copy(@NotNull File source, @NotNull File target) throws IOException {
-        final FileOutputStream out = new FileOutputStream(target);
+        // opened first, so that a missing source doesn't leave an empty target behind
+        final FileInputStream in = new FileInputStream(source);
+        final FileOutputStream out;
         try {
-            copy(new FileInputStream(source), out);
+            out = new FileOutputStream(target);
+        } catch (IOException ex) {
+            closeQuietly(in);
+            throw ex;
+        }
+        try {
+            copy(in, out);
         } finally {
             closeQuietly(out);
         }
@@ -306,8 +318,7 @@ public class DirUtils {
     }
 
     public static boolean isJava7Avail() {
-        // had to move the function here. On Android 4.4 we cannot call Java7FS.isAvail()
-        // since that would throw VerifyError when Android tries to load the Java7FS class.
+        // the probe lives here, not in Java7FS: on Android 4.4 merely loading Java7FS throws VerifyError.
         return JAVA7_AVAIL;
     }
 

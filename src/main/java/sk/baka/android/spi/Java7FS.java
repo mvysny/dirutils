@@ -1,30 +1,18 @@
 package sk.baka.android.spi;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
 
 /**
- * Uses new file methods added in Java 7 and Android API level 26 (Android Oreo 8.0.0).
+ * Uses new file methods added in Java 7 and Android API level 26 (Android Oreo 8.0.0). Instantiate only after
+ * {@link sk.baka.android.DirUtils#isJava7Avail()} said yes.
  * @author mvy
  */
 public class Java7FS implements FileSystemSpi {
-    private static final boolean AVAIL;
-    static {
-        boolean avail = true;
-        try {
-            Class.forName("java.nio.file.Files");
-        } catch (ClassNotFoundException ex) {
-            avail = false;
-        }
-        AVAIL = avail;
-    }
-    public static boolean isAvail() {
-        return AVAIL;
-    }
-
     @Override
     public boolean rename(@NotNull File source, @NotNull File target) throws IOException {
         try {
@@ -32,6 +20,8 @@ public class Java7FS implements FileSystemSpi {
             return true;
         } catch (AtomicMoveNotSupportedException ex) {
             return false;
+        } catch (IOException ex) {
+            throw new IOException("Failed to rename '" + source + "' to '" + target + "': " + reason(FailureReason.ofRename(source, target), ex), ex);
         }
     }
 
@@ -39,10 +29,8 @@ public class Java7FS implements FileSystemSpi {
     public void delete(@NotNull File fileOrEmptyDirectory) throws IOException {
         try {
             Files.delete(fileOrEmptyDirectory.toPath());
-        } catch (DirectoryNotEmptyException ex) {
-            throw new IOException("Failed to delete '" + fileOrEmptyDirectory + "' because it's not empty", ex);
         } catch (IOException ex) {
-            throw new IOException("Failed to delete '" + fileOrEmptyDirectory + "': " + ex.getMessage(), ex);
+            throw new IOException("Failed to delete '" + fileOrEmptyDirectory + "': " + reason(FailureReason.ofDelete(fileOrEmptyDirectory), ex), ex);
         }
     }
 
@@ -50,10 +38,38 @@ public class Java7FS implements FileSystemSpi {
     public void mkdir(@NotNull File directory) throws IOException {
         try {
             Files.createDirectory(directory.toPath());
-        } catch (FileAlreadyExistsException ex) {
-            throw new IOException("'" + directory + "' points to a file", ex);
         } catch (IOException ex) {
-            throw new IOException("The directory '" + directory + "' couldn't be created: " + (!directory.getParentFile().exists() ? directory.getParent() + " does not exist" : !directory.getParentFile().canWrite() ? directory.getParent() + " not writable" : "unknown"), ex);
+            if (ex instanceof FileAlreadyExistsException && directory.isDirectory()) {
+                return;
+            }
+            throw new IOException("The directory '" + directory + "' couldn't be created: " + reason(FailureReason.ofMkdir(directory), ex), ex);
         }
+    }
+
+    /**
+     * Prefers {@code guessed}, which names the culprit; NIO names only the paths it was given, and puts the reason
+     * of the commonest failures solely into the exception's type.
+     */
+    @NotNull
+    private static String reason(@Nullable String guessed, @NotNull IOException ex) {
+        if (guessed != null) {
+            return guessed;
+        }
+        if (!(ex instanceof FileSystemException)) {
+            return ex.toString();
+        }
+        final String reason = ((FileSystemException) ex).getReason();
+        if (reason != null) {
+            return reason;
+        } else if (ex instanceof AccessDeniedException) {
+            return "permission denied";
+        } else if (ex instanceof NoSuchFileException) {
+            return "no such file or directory";
+        } else if (ex instanceof DirectoryNotEmptyException) {
+            return "directory not empty";
+        } else if (ex instanceof FileAlreadyExistsException) {
+            return "already exists";
+        }
+        return ex.toString();
     }
 }

@@ -6,39 +6,37 @@ import java.io.File;
 import java.io.IOException;
 
 /**
- * Basic operations every FS must implement. {@link sk.baka.android.DirUtils} uses this as its backend.
+ * Basic operations every FS must implement. {@link sk.baka.android.DirUtils} uses this as its backend, and
+ * hands in absolute paths only.
+ * <p></p>
+ * Every failure throws an {@link IOException} naming the culprit and why, e.g.
+ * <pre>The directory '/data/foo/bar' couldn't be created: '/data/foo' is not writable</pre>
  * @author mvy
  */
 public interface FileSystemSpi {
     /**
-     * Renames the file, overwriting the target file.
-     * <p></p>
-     * If the file cannot be renamed atomically (because target resides on a different mount point), return false.
+     * Renames the file, atomically.
      *
-     * @param source source file, not null.
-     * @param target target file, not null. Does not exist.
-     * @return true on success, false ONLY IF target resides on a different mount point and needs to be copied.
-     * @throws IOException on any I/O error
+     * @param target does not exist.
+     * @return false ONLY IF target resides on a different mount point, so the caller has to copy.
+     * @throws IOException on any other failure.
      */
     boolean rename(@NotNull File source, @NotNull File target) throws IOException;
 
     /**
      * Deletes given file or empty directory.
      *
-     * @param fileOrEmptyDirectory the file/directory to delete, not null. Will be an absolute path (must start with a slash).
-     * Will exist.
-     * @throws IOException if the delete fails because given file does not exist, is not an empty dir, etc etc.
+     * @param fileOrEmptyDirectory exists.
+     * @throws IOException if the delete fails, e.g. because the directory is not empty.
      */
     void delete(@NotNull File fileOrEmptyDirectory) throws IOException;
+
     /**
-     * Creates given directory. Fails if the directory already exists. Does not create parent directory.
-     * <p></p>
-     * Fails if there already is a file with given name, or if the directory couldn't be created.
-     * <p></p>
-     * As opposed to dumb {@link File#mkdir()} this method throws {@link IOException} with informative message if the function fails.
-     * @param directory the directory to create, not null. Must be an absolute path (must start with a slash). May exist, and may point to a file.
-     * @throws IOException if directory create fails.
-     * @throws IllegalArgumentException if given path is not absolute.
+     * Creates given directory; does nothing if it already is one, so a concurrent {@code mkdirs()} of the same
+     * tree doesn't fail. Does not create the parent directory.
+     *
+     * @param directory may exist, and may point to a file.
+     * @throws IOException if the directory couldn't be created, e.g. because a file of that name exists.
      */
     void mkdir(@NotNull File directory) throws IOException;
 }
