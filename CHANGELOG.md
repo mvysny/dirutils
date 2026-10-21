@@ -2,7 +2,7 @@
 
 What a user of the previous release notices, newest release first.
 
-## 2.2 — unreleased
+## 2.2 — 2026-10-21
 
 - Recursive delete no longer follows symlinks (it used to delete the target's contents), and
   a dangling symlink is now deleted instead of being skipped.
