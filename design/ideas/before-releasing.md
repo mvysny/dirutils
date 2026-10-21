@@ -17,8 +17,6 @@ Latest stable as of 2026-10-21 (`maven-versions.rb latest`):
 
 ## Minor code issues
 
-- `copy(InputStream, …)` only logs a failed `flush()`, so a write lost in a buffer goes
-  unreported. That breaks the "nothing but `*Quietly` swallows an `IOException`" convention.
 - `Q_canon_cache`: `DumbJavaFS.isSymlink` uses canonical paths; on JDK 8–11 the JVM caches them
   (`sun.io.useCanonCaches`, default on until JDK 12) for ~30 s, so a symlink created or
   removed meanwhile can be misreported. On a JVM `Java7FS` is picked anyway, so it only bites
@@ -38,6 +36,8 @@ Things a 2.1 user notices:
   - `copy` copies a directory as an empty one and replaces a target symlink instead of writing
     through it. It no longer leaves a half-written target behind.
   - Neither destroys the file any more when the target is a second path to the source.
+- `copy(InputStream, OutputStream)` now throws when the final `flush()` fails, or the output's
+  `close()` after a successful copy; it used to only log them. A failed copy is no longer flushed.
 - slf4j 1.7 → 2.0: an app with a 1.7-style binding gets a no-op logger for this library;
   `org.slf4j:slf4j-android` has no 2.x, [slf4j-handroid](https://github.com/mvysny/slf4j-handroid) does.
 - Java 7 → 8 bytecode: still any Android version, but the app's build needs AGP 3.0+.

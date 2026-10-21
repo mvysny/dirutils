@@ -227,10 +227,10 @@ public class DirUtils {
         }
         boolean copied = false;
         try {
-            copy(in, out);
+            // closing out is part of the copy: its failure may mean lost bytes, so the target goes too
+            copy(in, out, true, true);
             copied = true;
         } finally {
-            closeQuietly(out);
             if (!copied) {
                 absoluteTarget.delete();
             }
@@ -255,8 +255,8 @@ public class DirUtils {
     /**
      * Copies everything left in {@code inputStream} to {@code outputStream}.
      * @param inputStream always closed, even on failure.
-     * @param outputStream flushed, never closed.
-     * @throws IOException if a read or a write fails.
+     * @param outputStream flushed on success, never closed.
+     * @throws IOException if a read, a write or the flush fails.
      */
     public static void copy(@NotNull InputStream inputStream, @NotNull OutputStream outputStream) throws IOException {
         copy(inputStream, outputStream, true, false);
@@ -267,12 +267,14 @@ public class DirUtils {
     /**
      * Copies everything left in {@code inputStream} to {@code outputStream}.
      * @param inputStream read to its end.
-     * @param outputStream flushed, even on failure.
+     * @param outputStream flushed on success.
      * @param closeIn whether to close {@code inputStream} afterwards, even on failure.
      * @param closeOut whether to close {@code outputStream} afterwards, even on failure.
-     * @throws IOException if a read or a write fails.
+     * @throws IOException if a read, a write, the flush or, on success, closing {@code outputStream} fails. Once
+     *   the copy has failed, a failing close is only logged, so that it doesn't mask the original exception.
      */
     public static void copy(@NotNull InputStream inputStream, @NotNull OutputStream outputStream, boolean closeIn, boolean closeOut) throws IOException {
+        boolean copied = false;
         try {
             final byte[] buf = new byte[BUFSIZE];
             for (; ; ) {
@@ -283,17 +285,18 @@ public class DirUtils {
                     outputStream.write(buf, 0, bytes);
                 }
             }
+            outputStream.flush();
+            copied = true;
         } finally {
-            try {
-                outputStream.flush();
-            } catch (Exception ex) {
-                log.error("Failed to flush output stream", ex);
-            }
             if (closeIn) {
                 closeQuietly(inputStream);
             }
             if (closeOut) {
-                closeQuietly(outputStream);
+                if (copied) {
+                    outputStream.close();
+                } else {
+                    closeQuietly(outputStream);
+                }
             }
         }
     }

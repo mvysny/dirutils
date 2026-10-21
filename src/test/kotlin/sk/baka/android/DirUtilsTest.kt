@@ -649,12 +649,34 @@ class DirUtilsTest(private val fs: FS) {
         }
 
         @Test
-        fun `a failing flush doesn't fail the copy`() {
+        fun `a failing flush fails the copy`() {
+            val input = TrackingInputStream("foo".toByteArray())
             val output = object : ByteArrayOutputStream() {
                 override fun flush() = throw IOException("simulated")
             }
-            DirUtils.copy(ByteArrayInputStream("foo".toByteArray()), output)
-            expect("foo") { output.toString() }
+            expectThrows(IOException::class, "simulated") { DirUtils.copy(input, output) }
+            expect(true) { input.closed }
+        }
+
+        @Test
+        fun `a failing close fails a successful copy`() {
+            val input = TrackingInputStream("foo".toByteArray())
+            val output = object : ByteArrayOutputStream() {
+                override fun close() = throw IOException("simulated")
+            }
+            expectThrows(IOException::class, "simulated") { DirUtils.copy(input, output, true, true) }
+            expect(true) { input.closed }
+        }
+
+        @Test
+        fun `a failing close doesn't mask the original failure`() {
+            val input = object : InputStream() {
+                override fun read(): Int = throw IOException("read failed")
+            }
+            val output = object : ByteArrayOutputStream() {
+                override fun close() = throw IOException("close failed")
+            }
+            expectThrows(IOException::class, "read failed") { DirUtils.copy(input, output, true, true) }
         }
     }
 
