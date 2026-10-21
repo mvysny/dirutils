@@ -1,9 +1,11 @@
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     java
-    kotlin("jvm") version "2.0.20"
+    // Gradle 8, because it runs on JDK 8 and CI builds there. When Kotlin drops Gradle 8 or
+    // JDK 8, move to Gradle 9 and JDK 17+: by then no sensible phone runs an Android that can't.
+    kotlin("jvm") version "2.4.21"
     `maven-publish`
     signing
     jacoco
@@ -20,8 +22,10 @@ java {
     targetCompatibility = JavaVersion.VERSION_1_8
 }
 
-tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "1.8"  // stay on 1.8 to retain compatibility with Android
+kotlin {
+    // stay on 1.8 to retain compatibility with Android. No apiVersion pin: a Kotlin consumer
+    // needs a compiler at most one minor behind ours to read the File extensions' metadata.
+    compilerOptions { jvmTarget = JvmTarget.JVM_1_8 }
 }
 
 repositories {
@@ -117,7 +121,10 @@ val verifyDesignTripwires by tasks.registering(Exec::class) {
 }
 tasks.check { dependsOn(verifyDesignTripwires) }
 
+// Kotlin binds calls against the JDK it compiles on: on JDK 17 it can pick a JDK 9+ member
+// (a stream method, String.lines()) over the stdlib one, and the jar no longer runs on
+// JDK <= 11 or Android. Not JDK 8 either: publishing from it to Maven Central is untested.
 if (JavaVersion.current() > JavaVersion.VERSION_11 && gradle.startParameter.taskNames.contains("publish")) {
-    throw GradleException("Release this library with JDK 11 or lower, to ensure Android compatibility; current JDK is ${JavaVersion.current()}")
+    throw GradleException("Release this library with JDK 11, to ensure Android compatibility; current JDK is ${JavaVersion.current()}")
 }
 

@@ -9,7 +9,7 @@ like deleting a directory recursively, moving a file (even across different moun
 ## Promises
 
 - **Fail loudly, with a reason.** Every operation throws an `IOException` saying why it failed, never a bare `false`.
-- **Runs on old Android.** Java 8 bytecode, and nothing loads a class the device lacks; see `D_runtime_spi`.
+- **Runs on any Android version.** Java 8 bytecode (desugared by AGP 3.0+), no Android API, and nothing loads a class the device lacks; reasoned, not device-tested; see `D_runtime_spi`.
 - **Adds nothing to an app's size.** `slf4j-api` is the only runtime dependency; Kotlin stdlib and Android are `compileOnly`.
 
 ## Design docs

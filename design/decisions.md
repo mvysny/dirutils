@@ -17,7 +17,7 @@ above, open the doc comments it touches and cut what they already say, then cut 
 
 `java.nio.file.Files` says why a mkdir or delete failed and can move atomically, which is the
 whole point of the library; `java.io.File` answers `false`. But Android has `java.nio.file`
-only from API 26 (Oreo), and **Runs on old Android** promises the devices before it. So every
+only from API 26 (Oreo), and **Runs on any Android version** promises the devices before it. So every
 mutation goes through `FileSystemSpi`, chosen once on first use: `Java7FS` where
 `java.nio.file.Files` loads, else `DumbJavaFS`, which guesses its messages from what `File`
 can still see — the path is a file, the parent is not writable. The probe sits in `DirUtils`,
