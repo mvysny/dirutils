@@ -10,7 +10,8 @@ What a user of the previous release notices, newest release first.
   mount points too, returning nothing: a custom backend passed to `DirUtils.set()` must follow.
 - `rename` and `copy(File, File)` now behave like `Files.move` / `Files.copy`:
   - Across mount points, `rename` moves an empty directory, the modification time, and (on
-    Android 8.0+) a symlink as itself. A non-empty directory still fails, now with a clear reason.
+    Android 8.0+, except onto external storage) a symlink as itself. A non-empty directory
+    still fails, now with a clear reason.
   - `copy` copies a directory as an empty one and replaces a target symlink instead of writing
     through it. It no longer leaves a half-written target behind.
   - Neither destroys the file any more when the target is a second path to the source.
