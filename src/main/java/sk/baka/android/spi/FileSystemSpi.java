@@ -8,8 +8,8 @@ import java.io.IOException;
 /**
  * Basic operations every FS must implement. {@link sk.baka.android.DirUtils} uses this as its backend, and
  * hands in absolute paths only.
- * <p></p>
- * Every failure throws an {@link IOException} naming the culprit and why, e.g.
+ *
+ * <p>Every failure throws an {@link IOException} naming the culprit and why, e.g.
  * <pre>The directory '/data/foo/bar' couldn't be created: '/data/foo' is not writable</pre>
  * @author mvy
  */
@@ -17,6 +17,7 @@ public interface FileSystemSpi {
     /**
      * Renames the file, atomically.
      *
+     * @param source exists.
      * @param target does not exist.
      * @return false ONLY IF target resides on a different mount point, so the caller has to copy.
      * @throws IOException on any other failure.
@@ -41,10 +42,11 @@ public interface FileSystemSpi {
     void mkdir(@NotNull File directory) throws IOException;
 
     /**
-     * Tells whether this is a symlink, dangling or not. Recursive operations delete a symlink rather than follow
-     * it, like {@code rm -rf} does.
+     * Tells whether {@code file} itself is a symlink, which recursive operations delete rather than follow, like
+     * {@code rm -rf} does.
      *
      * @param file may not exist.
+     * @return true for a dangling symlink too.
      * @throws IOException if the path can't be resolved.
      */
     boolean isSymlink(@NotNull File file) throws IOException;

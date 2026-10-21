@@ -29,7 +29,7 @@ Java:
 File thumbnails = new File(context.getCacheDir(), "thumbnails");
 DirUtils.mkdirs(thumbnails);       // like `mkdir -p`; throws IOException instead of returning false
 DirUtils.rename(new File(thumbnails, "a.tmp"), new File(thumbnails, "a.png"));  // copies+deletes across mount points
-DirUtils.deleteNonRec(thumbnails); // java.io.IOException: Failed to delete '/data/.../thumbnails' because it's not empty
+DirUtils.deleteNonRec(thumbnails); // java.io.IOException: Failed to delete '/data/.../thumbnails': '/data/.../thumbnails' is not empty
 DirUtils.deleteRecursively(thumbnails);  // like `rm -rf`
 ```
 

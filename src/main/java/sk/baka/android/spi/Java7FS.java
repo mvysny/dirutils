@@ -8,8 +8,9 @@ import java.io.IOException;
 import java.nio.file.*;
 
 /**
- * Uses new file methods added in Java 7 and Android API level 26 (Android Oreo 8.0.0). Instantiate only after
- * {@link sk.baka.android.DirUtils#isJava7Avail()} said yes.
+ * Backend on {@code java.nio.file}, there on Java 7+ and Android 8.0 (API 26)+. Load this class only after
+ * {@link sk.baka.android.DirUtils#isJava7Avail()} said yes: on older Android, loading it throws
+ * {@link VerifyError}.
  * @author mvy
  */
 public class Java7FS implements FileSystemSpi {

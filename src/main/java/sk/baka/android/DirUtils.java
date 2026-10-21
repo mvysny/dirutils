@@ -18,6 +18,21 @@ import sk.baka.android.spi.FileSystemSpi;
 import sk.baka.android.spi.Java7FS;
 
 /**
+ * {@link File} operations that throw an {@link IOException} saying why, instead of returning {@code false}:
+ *
+ * <pre>{@code
+ * File thumbnails = new File(context.getCacheDir(), "thumbnails");
+ * DirUtils.mkdirs(thumbnails);             // like mkdir -p
+ * DirUtils.rename(new File(thumbnails, "a.tmp"), new File(thumbnails, "a.png"));
+ * DirUtils.deleteNonRec(thumbnails);       // IOException: Failed to delete '/data/.../thumbnails': '/data/.../thumbnails' is not empty
+ * DirUtils.deleteRecursively(thumbnails);  // like rm -rf
+ * }</pre>
+ *
+ * The mkdir, delete and rename methods take absolute paths only: a relative one throws
+ * {@link IllegalArgumentException}, to catch resolving it against an unexpected working directory. The
+ * {@code *Quietly} variants log the failure instead of throwing.
+ *
+ * <p>The work is done by a {@link FileSystemSpi} backend, picked at runtime; {@link #set} forces one.
  * @author mvy
  */
 public class DirUtils {
@@ -25,27 +40,21 @@ public class DirUtils {
     }
 
     /**
-     * Creates given directory. Does nothing if the directory already exists. Does not create parent directory - use {@link #mkdirs(String)} for that.
-     * <p></p>
-     * Fails if there already is a file with given name, or if the directory couldn't be created.
-     * <p></p>
-     * As opposed to dumb {@link File#mkdir()} this method throws {@link IOException} with informative message if the function fails.
-     * @param directory the directory to create, not null. Must be an absolute path (must start with a slash).
-     * @throws IOException if directory create fails.
-     * @throws IllegalArgumentException if given path is not absolute.
+     * Same as {@link #mkdir(File)}.
+     * @param directory absolute.
+     * @throws IOException if the directory couldn't be created.
+     * @throws IllegalArgumentException if {@code directory} is relative.
      */
     public static void mkdir(@NotNull String directory) throws IOException {
         mkdir(new File(directory));
     }
     /**
-     * Creates given directory. Does nothing if the directory already exists. Does not create parent directory - use {@link #mkdirs(String)} for that.
-     * <p></p>
-     * Fails if there already is a file with given name, or if the directory couldn't be created.
-     * <p></p>
-     * As opposed to dumb {@link File#mkdir()} this method throws {@link IOException} with informative message if the function fails.
-     * @param directory the directory to create, not null. Must be an absolute path (must start with a slash).
-     * @throws IOException if directory create fails.
-     * @throws IllegalArgumentException if given path is not absolute.
+     * Creates the directory; does nothing if it already is one. Does not create the parent, see
+     * {@link #mkdirs(File)}.
+     * @param directory absolute.
+     * @throws IOException if the directory couldn't be created, e.g. because a file of that name exists or the
+     *   parent is missing.
+     * @throws IllegalArgumentException if {@code directory} is relative.
      */
     public static void mkdir(@NotNull File directory) throws IOException {
         if (!directory.isAbsolute()) {
@@ -58,28 +67,21 @@ public class DirUtils {
     }
 
     /**
-     * Creates given directory and all of necessary parent directories. Does nothing if the directory already exists.
-     * <p></p>
-     * Fails if there already is a file with given name, or if the directory couldn't be created. On failure, some directories might have been created.
-     * <p></p>
-     * As opposed to dumb {@link File#mkdirs()} this method throws {@link IOException} with informative message if the function fails.
-     * @param directory the directory to create, not null. Must be an absolute directory (must start with a slash).
-     * @throws IOException if directory create fails.
-     * @throws IllegalArgumentException if given path is not absolute.
+     * Same as {@link #mkdirs(File)}.
+     * @param directory absolute.
+     * @throws IOException if a directory couldn't be created.
+     * @throws IllegalArgumentException if {@code directory} is relative.
      */
     public static void mkdirs(@NotNull String directory) throws IOException {
         mkdirs(new File(directory));
     }
 
     /**
-     * Creates given directory and all of necessary parent directories. Does nothing if the directory already exists.
-     * <p></p>
-     * Fails if there already is a file with given name, or if the directory couldn't be created. On failure, some directories might have been created.
-     * <p></p>
-     * As opposed to dumb {@link File#mkdirs()} this method throws {@link IOException} with informative message if the function fails.
-     * @param directory the directory to create, not null. Must be an absolute directory (must start with a slash).
-     * @throws IOException if directory create fails.
-     * @throws IllegalArgumentException if given path is not absolute.
+     * Creates the directory and any missing parents, like {@code mkdir -p}; does nothing if it already is one.
+     * @param directory absolute.
+     * @throws IOException if a directory couldn't be created, e.g. because a file of that name exists; the parents
+     *   created before it stay.
+     * @throws IllegalArgumentException if {@code directory} is relative.
      */
     public static void mkdirs(@NotNull File directory) throws IOException {
         if (!directory.isAbsolute()) {
@@ -95,20 +97,20 @@ public class DirUtils {
     }
 
     /**
-     * Deletes given file or empty directory. Does nothing if there is no such file or directory with given name.
-     * @param fileOrEmptyDirectory the file/directory to delete, not null. Must be an absolute path (must start with a slash).
-     * @throws IOException if directory delete fails, for example because the directory is not empty.
-     * @throws IllegalArgumentException if given path is not absolute.
+     * Same as {@link #deleteNonRec(File)}.
+     * @param fileOrEmptyDirectory absolute.
+     * @throws IOException if the delete fails, e.g. because the directory is not empty.
+     * @throws IllegalArgumentException if {@code fileOrEmptyDirectory} is relative.
      */
     public static void deleteNonRec(@NotNull String fileOrEmptyDirectory) throws IOException {
         deleteNonRec(new File(fileOrEmptyDirectory));
     }
     /**
-     * Deletes given file or empty directory. Does nothing if there is no such file or directory with given name.
-     * A symlink is deleted itself, even a dangling one.
-     * @param fileOrEmptyDirectory the file/directory to delete, not null. Must be an absolute path (must start with a slash).
-     * @throws IOException if directory delete fails, for example because the directory is not empty.
-     * @throws IllegalArgumentException if given path is not absolute.
+     * Deletes the file or empty directory; does nothing if it doesn't exist. A symlink, even a dangling one, is
+     * deleted itself, not its target.
+     * @param fileOrEmptyDirectory absolute.
+     * @throws IOException if the delete fails, e.g. because the directory is not empty.
+     * @throws IllegalArgumentException if {@code fileOrEmptyDirectory} is relative.
      */
     public static void deleteNonRec(@NotNull File fileOrEmptyDirectory) throws IOException {
         if (!fileOrEmptyDirectory.isAbsolute()) {
@@ -122,19 +124,20 @@ public class DirUtils {
     }
 
     /**
-     * Deletes given directory, including subdirectories.
-     * @param path the directory or file to delete, not null. Must be an absolute path (must start with a slash).
-     * @throws IOException if the directory delete fails.
-     * @throws IllegalArgumentException if given path is not absolute.
+     * Same as {@link #deleteRecursively(File)}.
+     * @param path absolute.
+     * @throws IOException if an entry couldn't be deleted.
+     * @throws IllegalArgumentException if {@code path} is relative.
      */
     public static void deleteRecursively(@NotNull String path) throws IOException {
         deleteRecursively(new File(path));
     }
     /**
-     * Deletes given directory, including subdirectories. Like {@code rm -rf}, a symlink is deleted, never followed.
-     * @param path the directory or file to delete, not null. Must be an absolute path (must start with a slash).
-     * @throws IOException if the directory delete fails.
-     * @throws IllegalArgumentException if given path is not absolute.
+     * Deletes the file, or the directory with everything in it, like {@code rm -rf}: a symlink is deleted, never
+     * followed. Does nothing if it doesn't exist.
+     * @param path absolute.
+     * @throws IOException if an entry couldn't be deleted; the entries deleted before it stay deleted.
+     * @throws IllegalArgumentException if {@code path} is relative.
      */
     public static void deleteRecursively(@NotNull File path) throws IOException {
         if (!path.isAbsolute()) {
@@ -152,12 +155,16 @@ public class DirUtils {
     }
 
     /**
-     * Renames the file, overwriting the target file.
-     * <p></p>
-     * If the file cannot be renamed atomically (because target resides on a different mount point), the file is copied, then deleted.
-     * @param source source file, not null.
-     * @param target target file, not null.
-     * @throws IOException
+     * Moves the file, replacing {@code target}, like {@code mv}. Across mount points, where no atomic rename
+     * exists, the file is copied, then the source deleted; a directory can't move that way, see
+     * {@link #copy(File, File)}.
+     *
+     * <p>Not atomic: {@code target} is deleted first, so a move that fails afterwards leaves the source in place
+     * and the target gone.
+     * @param source must exist.
+     * @param target absolute; may be an empty directory, never a non-empty one.
+     * @throws IOException if the source is missing, or the target can't be deleted, or the move fails.
+     * @throws IllegalArgumentException if {@code target} is relative.
      */
     public static void rename(@NotNull File source, @NotNull File target) throws IOException {
         if (source.equals(target)) {
@@ -174,6 +181,14 @@ public class DirUtils {
         }
     }
 
+    /**
+     * Copies the file's bytes into {@code target}. Copies no attributes, such as permissions or the modification
+     * time.
+     * @param source a file, never a directory.
+     * @param target created, or overwritten.
+     * @throws IOException if the source can't be read or the target written; a missing source leaves no target
+     *   behind.
+     */
     public static void copy(@NotNull File source, @NotNull File target) throws IOException {
         // opened first, so that a missing source doesn't leave an empty target behind
         final FileInputStream in = new FileInputStream(source);
@@ -192,9 +207,10 @@ public class DirUtils {
     }
 
     /**
-     * Copies input stream.
-     * @param inputStream the input stream, always closed.
-     * @param outputStream the output stream, never closed.
+     * Copies everything left in {@code inputStream} to {@code outputStream}.
+     * @param inputStream always closed, even on failure.
+     * @param outputStream flushed, never closed.
+     * @throws IOException if a read or a write fails.
      */
     public static void copy(@NotNull InputStream inputStream, @NotNull OutputStream outputStream) throws IOException {
         copy(inputStream, outputStream, true, false);
@@ -203,11 +219,12 @@ public class DirUtils {
     private static final int BUFSIZE = 8192;
 
     /**
-     * Copies input stream.
-     * @param inputStream the input stream, closed as required.
-     * @param outputStream the output stream, closed as required, always flushed.
-     * @param closeIn if true, inputStream is closed.
-     * @param closeOut if true, outputStream is closed.
+     * Copies everything left in {@code inputStream} to {@code outputStream}.
+     * @param inputStream read to its end.
+     * @param outputStream flushed, even on failure.
+     * @param closeIn whether to close {@code inputStream} afterwards, even on failure.
+     * @param closeOut whether to close {@code outputStream} afterwards, even on failure.
+     * @throws IOException if a read or a write fails.
      */
     public static void copy(@NotNull InputStream inputStream, @NotNull OutputStream outputStream, boolean closeIn, boolean closeOut) throws IOException {
         try {
@@ -236,8 +253,8 @@ public class DirUtils {
     }
 
     /**
-     * Quietly closes given closeable. Errors are logged.
-     * @param s the closeable, may be null. Does nothing if s is null.
+     * Closes {@code s}, logging a failure instead of throwing it.
+     * @param s nothing happens if null.
      */
     public static void closeQuietly(@Nullable Closeable s) {
         if (s != null) {
@@ -250,8 +267,9 @@ public class DirUtils {
     }
 
     /**
-     * Deletes given file or dictionary. Does not throw {@link IOException}. Does NOT delete non-empty directory.
-     * @param fileOrDir the file or directory to delete, not null.
+     * Like {@link #deleteNonRec(File)}, but logs a failure instead of throwing it.
+     * @param fileOrDir absolute.
+     * @throws IllegalArgumentException if {@code fileOrDir} is relative; that one is not swallowed.
      */
     public static void deleteNonRecQuietly(@NotNull File fileOrDir) {
         try {
@@ -262,16 +280,18 @@ public class DirUtils {
     }
 
     /**
-     * Deletes given file or dictionary. Does not throw {@link IOException}. Does NOT delete non-empty directory.
-     * @param fileOrDir the file or directory to delete, not null.
+     * Same as {@link #deleteNonRecQuietly(File)}.
+     * @param fileOrDir absolute.
+     * @throws IllegalArgumentException if {@code fileOrDir} is relative; that one is not swallowed.
      */
     public static void deleteNonRecQuietly(@NotNull String fileOrDir) {
         deleteNonRecQuietly(new File(fileOrDir));
     }
 
     /**
-     * Deletes given file or dictionary. Does not throw {@link IOException}.
-     * @param fileOrDir the file or directory to delete, not null.
+     * Like {@link #deleteRecursively(File)}, but logs a failure instead of throwing it.
+     * @param fileOrDir absolute.
+     * @throws IllegalArgumentException if {@code fileOrDir} is relative; that one is not swallowed.
      */
     public static void deleteRecursivelyQuietly(@NotNull File fileOrDir) {
         try {
@@ -282,8 +302,9 @@ public class DirUtils {
     }
 
     /**
-     * Deletes given file or dictionary. Does not throw {@link IOException}.
-     * @param fileOrDir the file or directory to delete, not null.
+     * Same as {@link #deleteRecursivelyQuietly(File)}.
+     * @param fileOrDir absolute.
+     * @throws IllegalArgumentException if {@code fileOrDir} is relative; that one is not swallowed.
      */
     public static void deleteRecursivelyQuietly(@NotNull String fileOrDir) {
         deleteRecursivelyQuietly(new File(fileOrDir));
@@ -297,8 +318,9 @@ public class DirUtils {
     private static volatile FileSystemSpi FORCE_SPI;
 
     /**
-     * Allows you to force a particular SPI, bypassing the detection routine.
-     * @param fileSystemSpi the SPI to use, null to enable the auto-detection routine.
+     * Forces a backend, e.g. {@code DirUtils.set(new DumbJavaFS())}, instead of the detected one:
+     * {@link Java7FS} if {@link #isJava7Avail()}, else {@link DumbJavaFS}.
+     * @param fileSystemSpi the backend, or {@code null} to detect one again.
      */
     public static synchronized void set(@Nullable FileSystemSpi fileSystemSpi) {
         SPI = null;
@@ -316,6 +338,10 @@ public class DirUtils {
         JAVA7_AVAIL = avail;
     }
 
+    /**
+     * Tells whether {@code java.nio.file} is there; only then may {@link Java7FS} be loaded.
+     * @return true on any JVM, and on Android 8.0 (API 26)+.
+     */
     public static boolean isJava7Avail() {
         // the probe lives here, not in Java7FS: on Android 4.4 merely loading Java7FS throws VerifyError.
         return JAVA7_AVAIL;

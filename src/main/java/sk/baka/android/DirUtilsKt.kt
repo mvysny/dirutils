@@ -4,45 +4,46 @@ import java.io.File
 import java.io.IOException
 
 /**
- * Creates the directory and all of necessary parent directories. Does nothing if the directory already exists. Must be called on an absolute File, to
- * avoid relative file mistakes.
+ * Creates this directory and any missing parents, like `mkdir -p`; does nothing if it already is one.
  *
- * Fails if there already is a file with given name, or if the directory couldn't be created. On failure, some directories might have been created.
- *
- * As opposed to dumb [File.mkdirs] this method throws [IOException] with informative message if the function fails.
- *
- * @throws IOException if directory create fails.
- * @throws IllegalArgumentException if given path is not absolute.
+ * @throws IOException if a directory couldn't be created, e.g. because a file of that name exists; the parents
+ *   created before it stay.
+ * @throws IllegalArgumentException if this file is relative.
  */
 @Throws(IOException::class)
 fun File.mkdirp() = DirUtils.mkdirs(this)
 
 /**
- * Deletes the file or empty directory.  The file must be [absolute][File.absolute]. Does nothing if there is no such file or directory with given name.
+ * Deletes this file or empty directory; does nothing if it doesn't exist. A symlink, even a dangling one, is
+ * deleted itself, not its target.
  *
- * @throws IOException if directory delete fails, for example because the directory is not empty.
- * @throws IllegalArgumentException if given path is not absolute.
+ * @throws IOException if the delete fails, e.g. because the directory is not empty.
+ * @throws IllegalArgumentException if this file is relative.
  */
 @Throws(IOException::class)
 fun File.rmf() = DirUtils.deleteNonRec(this)
 
 /**
- * Deletes this directory, including subdirectories. The file must be [absolute][File.absolute].
- * @throws IOException if the directory delete fails.
- * @throws IllegalArgumentException if given path is not absolute.
+ * Deletes this file, or this directory with everything in it, like `rm -rf`: a symlink is deleted, never
+ * followed. Does nothing if it doesn't exist.
+ *
+ * @throws IOException if an entry couldn't be deleted; the entries deleted before it stay deleted.
+ * @throws IllegalArgumentException if this file is relative.
  */
 @Throws(IOException::class)
 fun File.rmrf() = DirUtils.deleteRecursively(this)
 
 /**
- * Deletes given file or dictionary. Does not throw [IOException]. The file must be [absolute][File.absolute].
+ * Like [rmrf], but logs a failure instead of throwing it.
+ *
+ * @throws IllegalArgumentException if this file is relative; that one is not swallowed.
  */
 fun File.rmrfq() = DirUtils.deleteRecursivelyQuietly(this)
 
 /**
- * Returns length in bytes of given file or directory. A symlink counts 0 and is not followed.
- * @receiver dir the directory to list. A directory length is set to be 4kb + lengths of all its children.
- * @return the directory length, 0 if the directory/file does not exist.
+ * Returns the size in bytes of this file, or of this directory with everything in it; 0 if it doesn't exist.
+ * A directory counts 4096 on top of its children; a symlink counts 0 and is not followed.
+ *
  * @throws IOException if a symlink can't be told apart from a file, see [sk.baka.android.spi.FileSystemSpi.isSymlink].
  */
 @Throws(IOException::class)
