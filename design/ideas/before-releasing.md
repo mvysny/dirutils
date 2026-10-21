@@ -14,15 +14,6 @@ Latest stable as of 2026-10-21 (`maven-versions.rb latest`):
 | `io.github.gradle-nexus.publish-plugin` | 2.0.0 | 2.0.0 (current) |
 | `org.junit:junit-bom` (replaced DynaTest) | 5.14.4 | 6.1.3 (staying on 5; why in `build.gradle.kts`) |
 
-
-## Minor code issues
-
-- `Q_canon_cache`: `DumbJavaFS.isSymlink` uses canonical paths; on JDK 8–11 the JVM caches them
-  (`sun.io.useCanonCaches`, default on until JDK 12) for ~30 s, so a symlink created or
-  removed meanwhile can be misreported. On a JVM `Java7FS` is picked anyway, so it only bites
-  a forced `DumbJavaFS`; does Android's libcore cache canonical paths too? (The parked
-  `android-os-errno-backend.md` would sidestep it on API 21–25.)
-
 ## Release notes for 2.2
 
 Things a 2.1 user notices:

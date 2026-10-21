@@ -66,6 +66,10 @@ public class DumbJavaFS implements FileSystemSpi {
     /**
      * {@link File} follows symlinks everywhere, so a symlink is told by its canonical path differing from its path
      * under the canonical parent; a dangling one, which {@link File#exists()} denies, by its parent still listing it.
+     *
+     * <p>JDK 8–11 and maybe Android 7.x cache canonical paths for ~30 s ({@code sun.io.useCanonCaches}), clearing
+     * them only on a {@link File#delete()} or {@link File#renameTo}: a symlink created or removed any other way
+     * meanwhile can be misreported.
      */
     @Override
     public boolean isSymlink(@NotNull File file) throws IOException {
